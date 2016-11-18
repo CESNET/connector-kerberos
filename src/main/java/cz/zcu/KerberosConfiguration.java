@@ -25,7 +25,6 @@ package cz.zcu;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
 
@@ -48,9 +47,14 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	private String principal = null;
 
 	/**
+	 * The password to authenticate with.
+	 */
+	private String password = null;
+
+	/**
 	 * The keytab to authenticate with.
 	 */
-	private GuardedString keytab = null;
+	private String keytab = null;
 
 	/**
 	 * Constructor.
@@ -84,11 +88,22 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	@ConfigurationProperty(order = 3, displayMessageKey = "password.display",
 			groupMessageKey = "basic.group", helpMessageKey = "password.help",
 			confidential = true)
-	public GuardedString getKeytab() {
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	@ConfigurationProperty(order = 4, displayMessageKey = "password.display",
+		groupMessageKey = "basic.group", helpMessageKey = "password.help",
+		confidential = true)
+	public String getKeytab() {
 		return keytab;
 	}
 
-	public void setKeytab(GuardedString keytab) {
+	public void setKeytab(String keytab) {
 		this.keytab = keytab;
 	}
 
@@ -96,7 +111,9 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	 * {@inheritDoc}
 	 */
 	public void validate() {
-		Assertions.nullCheck(keytab, "keytab");
+		if (StringUtil.isBlank(keytab) && StringUtil.isBlank(password)) {
+			throw new IllegalArgumentException("Both password and keytab location cannot be null or empty");
+		}
 		Assertions.blankCheck(realm, "realm");
 		Assertions.blankCheck(principal, "principal");
 	}

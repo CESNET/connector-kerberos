@@ -24,64 +24,19 @@
 
 package cz.zcu;
 
-import java.net.UnknownHostException;
+import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
+import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
+import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
+import org.identityconnectors.framework.spi.operations.*;
+
 import java.util.Locale;
 import java.util.Set;
-
-import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.CollectionUtil;
-import org.identityconnectors.common.StringUtil;
-import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.script.ScriptExecutor;
-import org.identityconnectors.common.script.ScriptExecutorFactory;
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.common.security.SecurityUtil;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
-import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
-import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
-import org.identityconnectors.framework.common.objects.AttributesAccessor;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
-import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
-import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
-import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder;
-import org.identityconnectors.framework.common.objects.OperationOptions;
-import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
-import org.identityconnectors.framework.common.objects.PredefinedAttributeInfos;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.SchemaBuilder;
-import org.identityconnectors.framework.common.objects.ScriptContext;
-import org.identityconnectors.framework.common.objects.SearchResult;
-import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
-import org.identityconnectors.framework.common.objects.SyncDeltaType;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
-import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
-import org.identityconnectors.framework.spi.AttributeNormalizer;
-import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.ConnectorClass;
-import org.identityconnectors.framework.spi.Connector;
-import org.identityconnectors.framework.spi.SearchResultsHandler;
-import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
-import org.identityconnectors.framework.spi.operations.AuthenticateOp;
-import org.identityconnectors.framework.spi.operations.CreateOp;
-import org.identityconnectors.framework.spi.operations.DeleteOp;
-import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
-import org.identityconnectors.framework.spi.operations.SchemaOp;
-import org.identityconnectors.framework.spi.operations.ScriptOnConnectorOp;
-import org.identityconnectors.framework.spi.operations.ScriptOnResourceOp;
-import org.identityconnectors.framework.spi.operations.SearchOp;
-import org.identityconnectors.framework.spi.operations.SyncOp;
-import org.identityconnectors.framework.spi.operations.TestOp;
-import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
-import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 /**
  * Main implementation of the Kerberos Connector.
@@ -102,7 +57,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	private KerberosConfiguration configuration;
 
-	private Schema schema = null;
+	private long contextPointer;
 
 	/**
 	 * Gets the Configuration context for this connector.
@@ -121,7 +76,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void init(final Configuration configuration) {
 		this.configuration = (KerberosConfiguration) configuration;
-
+		krb5_init();
 	}
 
 	/**
@@ -130,8 +85,13 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * @see org.identityconnectors.framework.spi.Connector#dispose()
 	 */
 	public void dispose() {
+		krb5_destroy();
 		configuration = null;
 	}
+
+	private native void krb5_init();
+	private native void krb5_destroy();
+	private native void krb5_renew();
 
 	/******************
 	 * SPI Operations
@@ -204,7 +164,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
 		}
 	}
-
 
 	/**
 	 * {@inheritDoc}

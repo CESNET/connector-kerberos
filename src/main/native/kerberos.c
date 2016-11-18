@@ -10,6 +10,7 @@ exit $?
 
 #include <profile.h>
 #include "kerberos.h"
+#include "cz_zcu_KerberosConnector.h"
 
 
 char *krbconn_error(krbconn_context_t *ctx, krb5_error_code code) {
@@ -135,6 +136,78 @@ krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_pr
 	return 0;
 }
 
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this) {
+	krbconn_context_t* ctx = calloc(sizeof(krbconn_context_t), 1);
+	krbconn_config_t conf;
+	char* err;
+
+	jfieldID fid;
+	jclass cls;
+	jstring str;
+
+	//Get configuration from KerberosConfiguration
+	cls = (*env)->GetObjectClass(env, this);
+	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration");
+	jobject config = (*env)->GetObjectField(env, this, fid);
+
+	cls = (*env)->GetObjectClass(env, config);
+
+	fid = (*env)->GetFieldID(env, cls, "realm", "Ljava/lang/String");
+	str = (*env)->GetObjectField(env, cls, fid);
+	const char* realm = (*env)->GetStringUTFChars(env, str, 0);
+	config->realm = strdup(realm);
+	(*env)->ReleaseStringUTFChars(env, str, realm);
+
+	fid = (*env)->GetFieldID(env, cls, "principal", "Ljava/lang/String");
+	str = (*env)->GetObjectField(env, cls, fid);
+	const char* principal = (*env)->GetStringUTFChars(env, str, 0);
+	config->principal = strdup(principal);
+	(*env)->ReleaseStringUTFChars(env, str, principal);
+
+	fid = (*env)->GetFieldID(env, cls, "password", "Ljava/lang/String");
+	str = (*env)->GetObjectField(env, cls, fid);
+	const char* password = (*env)->GetStringUTFChars(env, str, 0);
+	config->password = strdup(password);
+	(*env)->ReleaseStringUTFChars(env, str, password);
+
+	fid = (*env)->GetFieldID(env, cls, "keytab", "Ljava/lang/String");
+	str = (*env)->GetObjectField(env, cls, fid);
+	const char* keytab = (*env)->GetStringUTFChars(env, str, 0);
+	config->keytab = strdup(keytab);
+	(*env)->ReleaseStringUTFChars(env, str, keytab);
+
+	//Initialize context
+	if ((krb5_error_code code = krbconn_init(ctx, &conf)) != 0) {
+		err = krbconn_error(ctx, code);
+		printf("%s\n", err);
+		free(err);
+		//TODO: throw exception
+		return;
+	}
+
+	//Store context
+	cls = (*env)->GetObjectClass(env, this);
+	fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	(*env)->SetLongField(env, this, fid, (jlong)ctx);
+
+	krbconn_free_config(&conf);
+}
+
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *, jobject) {
+	cls = (*env)->GetObjectClass(env, this);
+	fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
+
+	krbconn_destroy(ctx);
+	free(ctx);
+}
+
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *, jobject) {
+
+}
 
 #ifdef KRBCONN_TEST
 void usage(const char *name) {
