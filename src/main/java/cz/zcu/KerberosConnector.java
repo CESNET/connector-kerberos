@@ -24,10 +24,16 @@
 
 package cz.zcu;
 
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
@@ -35,16 +41,13 @@ import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.operations.*;
 
-import java.util.Locale;
-import java.util.Set;
-
 /**
  * Main implementation of the Kerberos Connector.
  */
 @ConnectorClass(
 		displayNameKey = "Kerberos.connector.display",
 		configurationClass = KerberosConfiguration.class)
-public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, TestOp, UpdateOp {
+public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, TestOp, UpdateOp, SchemaOp {
 
 	/**
 	 * Setup logging for the {@link KerberosConnector}.
@@ -56,6 +59,8 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * {@link KerberosConnector#init(org.identityconnectors.framework.spi.Configuration)}.
 	 */
 	private KerberosConfiguration configuration;
+
+	private Schema schema = null;
 
 	private long contextPointer;
 
@@ -202,4 +207,40 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		return uidAfterUpdate;
 	}
 
+
+	public Schema schema() {
+		logger.info("schema()");
+		if (schema == null) {
+			schema = buildSchema();
+		}
+		return schema;
+	}
+
+
+	private Schema buildSchema() {
+		final SchemaBuilder schemaBuilder = new SchemaBuilder(KerberosConnector.class);
+		Set<AttributeInfo> attributes = new HashSet<AttributeInfo>();
+
+		attributes.add(OperationalAttributeInfos.DISABLE_DATE);
+		attributes.add(OperationalAttributeInfos.ENABLE);
+		attributes.add(OperationalAttributeInfos.PASSWORD);
+		attributes.add(OperationalAttributeInfos.PASSWORD_EXPIRATION_DATE);
+
+		attributes.add(AttributeInfoBuilder.build("passwordChangeDate",
+			long.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+
+		attributes.add(AttributeInfoBuilder.build("modifyPrincipal",
+			String.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+
+		attributes.add(AttributeInfoBuilder.build("modifyDate",
+			long.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+
+		attributes.add(AttributeInfoBuilder.build("attributes", int.class));
+		attributes.add(AttributeInfoBuilder.build("policy", String.class));
+
+		final ObjectClassInfo ociInfoAccount = new ObjectClassInfoBuilder().setType(ObjectClass.ACCOUNT_NAME).addAllAttributeInfo(attributes).build();
+		schemaBuilder.defineObjectClass(ociInfoAccount);
+
+		return schemaBuilder.build();
+	}
 }
