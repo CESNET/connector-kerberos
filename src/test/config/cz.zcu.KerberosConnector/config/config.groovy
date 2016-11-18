@@ -33,7 +33,7 @@ import org.identityconnectors.common.security.GuardedString
 
 configuration{
     ssl = false
-    host="__configureme__"
+    principal="__configureme__"
     remoteUser="__configureme__"
     password=new GuardedString("__configureme__".toCharArray())
 }

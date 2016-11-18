@@ -24,6 +24,7 @@
 package cz.zcu;
 
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.spi.AbstractConfiguration;
 import org.identityconnectors.framework.spi.ConfigurationProperty;
@@ -49,7 +50,7 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	/**
 	 * The password to authenticate with.
 	 */
-	private String password = null;
+	private GuardedString password = null;
 
 	/**
 	 * The keytab to authenticate with.
@@ -63,9 +64,9 @@ public class KerberosConfiguration extends AbstractConfiguration {
 
 	}
 
-	@ConfigurationProperty(order = 1, displayMessageKey = "host.display",
-			groupMessageKey = "basic.group", helpMessageKey = "host.help",
-			required = true, confidential = false)
+	@ConfigurationProperty(order = 1, displayMessageKey = "realm.display",
+			groupMessageKey = "basic.group", helpMessageKey = "realm.help",
+			required = false, confidential = false)
 	public String getRealm() {
 		return realm;
 	}
@@ -88,17 +89,17 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	@ConfigurationProperty(order = 3, displayMessageKey = "password.display",
 			groupMessageKey = "basic.group", helpMessageKey = "password.help",
 			confidential = true)
-	public String getPassword() {
+	public GuardedString getPassword() {
 		return password;
 	}
 
-	public void setPassword(String password) {
+	public void setPassword(GuardedString password) {
 		this.password = password;
 	}
 
-	@ConfigurationProperty(order = 4, displayMessageKey = "password.display",
-		groupMessageKey = "basic.group", helpMessageKey = "password.help",
-		confidential = true)
+	@ConfigurationProperty(order = 4, displayMessageKey = "keytab.display",
+		groupMessageKey = "basic.group", helpMessageKey = "keytab.help",
+		confidential = false)
 	public String getKeytab() {
 		return keytab;
 	}
@@ -111,10 +112,9 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	 * {@inheritDoc}
 	 */
 	public void validate() {
-		if (StringUtil.isBlank(keytab) && StringUtil.isBlank(password)) {
+		if (StringUtil.isBlank(keytab) && password == null) {
 			throw new IllegalArgumentException("Both password and keytab location cannot be null or empty");
 		}
-		Assertions.blankCheck(realm, "realm");
 		Assertions.blankCheck(principal, "principal");
 	}
 }
