@@ -1,10 +1,11 @@
 #define CC /*
-gcc -I. -D_GNU_SOURCE -W -Wall -g -O0 $0 -o krbconn_test -lkrb5 -lkadm5clnt_mit
+gcc -I. -D_GNU_SOURCE -DKRBCONN_TEST -W -Wall -g -O0 $0 -o krbconn_test -lkrb5 -lkadm5clnt_mit
 exit $?
 */
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <profile.h>
@@ -63,39 +64,6 @@ krb5_error_code krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 }
 
 
-static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal principal, char **name) {
-	char *s;
-	krb5_error_code code;
-
-	if ((code = krb5_unparse_name(krb, principal, &s)) != 0) return code;
-	*name = strdup(s);
-	krb5_free_unparsed_name(krb, s);
-
-	return 0;
-}
-
-
-krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
-	krb5_error_code code;
-	krb5_principal principal;
-	kadm5_principal_ent_rec krbresult;
-
-	code = krb5_parse_name(ctx->krb, princ_name, &principal);
-	if (code) return code;
-
-	code = kadm5_get_principal(ctx->handle, principal, &krbresult, KADM5_PRINCIPAL_NORMAL_MASK/* | KADM5_KEY_DATA*/);
-	krb5_free_principal(ctx->krb, principal);
-	if (code) return code;
-
-	memset(result, 0, sizeof(*result));
-	if ((code = krbconn_princ2str(ctx->krb, krbresult.principal, &result->name)) != 0) return code;
-
-	kadm5_free_principal_ent(ctx->handle, &krbresult);
-
-	return 0;
-}
-
-
 void krbconn_destroy(krbconn_context_t *ctx) {
 	if (ctx->handle) kadm5_destroy(ctx->handle);
 	if (ctx->krb) {
@@ -123,10 +91,52 @@ void krbconn_free_config(krbconn_config_t *config) {
 void krbconn_free_principal(krbconn_principal_t *principal) {
 	free(principal->name);
 	free(principal->mod_name);
+	free(principal->policy);
 	memset(principal, 0, sizeof(*principal));
 }
 
 
+static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal principal, char **name) {
+	char *s;
+	krb5_error_code code;
+
+	if ((code = krb5_unparse_name(krb, principal, &s)) != 0) return code;
+	*name = strdup(s);
+	krb5_free_unparsed_name(krb, s);
+
+	return 0;
+}
+
+
+krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
+	krb5_error_code code;
+	krb5_principal principal;
+	kadm5_principal_ent_rec krbresult;
+
+	code = krb5_parse_name(ctx->krb, princ_name, &principal);
+	if (code) return code;
+
+	code = kadm5_get_principal(ctx->handle, principal, &krbresult, KADM5_PRINCIPAL_NORMAL_MASK/* | KADM5_KEY_DATA*/);
+	krb5_free_principal(ctx->krb, principal);
+	if (code) return code;
+
+	memset(result, 0, sizeof(*result));
+	if ((code = krbconn_princ2str(ctx->krb, krbresult.principal, &result->name)) != 0) return code;
+	result->princ_expire = krbresult.princ_expire_time;
+	result->pwd_expire = krbresult.pw_expiration;
+	result->pwd_change = krbresult.last_pwd_change;
+	if ((code = krbconn_princ2str(ctx->krb, krbresult.mod_name, &result->mod_name)) != 0) return code;
+	result->mod_date = krbresult.mod_date;
+	result->attributes = krbresult.attributes;
+	result->policy = strdup(krbresult.policy);
+
+	kadm5_free_principal_ent(ctx->handle, &krbresult);
+
+	return 0;
+}
+
+
+#ifdef KRBCONN_TEST
 void usage(const char *name) {
 	printf("Usage: %s [OPTIONS]\n\
 OPTIONS are:\n\
@@ -187,10 +197,18 @@ int main(int argc, char **argv) {
 		free(err);
 		return code;
 	}
-	printf("Principal: %s\n", principal.name);
+	printf("Principal:       %s\n", principal.name);
+	printf("Expire:          %s", ctime(&principal.princ_expire));
+	printf("Modified:        %s", ctime(&principal.mod_date));
+	printf("Modified by:     %s\n", principal.mod_name);
+	printf("Password change: %s", ctime(&principal.pwd_change));
+	printf("Password expire: %s", ctime(&principal.pwd_expire));
+	printf("Attributes:      %d\n", principal.attributes);
+	printf("Policy:          %s\n", principal.policy);
 	krbconn_free_principal(&principal);
 
 	krbconn_destroy(&ctx);
 	krbconn_free_config(&config);
 	return 0;
 }
+#endif
