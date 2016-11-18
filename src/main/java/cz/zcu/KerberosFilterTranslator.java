@@ -40,13 +40,12 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 /**
  * This is an implementation of AbstractFilterTranslator that gives a concrete representation
  * of which filters can be applied at the connector level (natively).
- *
+ * <p>
  * If the Kerberos doesn't support a certain expression type, that factory
  * method should return null. This level of filtering is present only to allow any
  * native constructs that may be available to help reduce the result set for the framework,
  * which will (strictly) reapply all filters specified after the connector does the initial
  * filtering.<p><p>Note: The generic query type is most commonly a String, but does not have to be.
- *
  */
 public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 
@@ -74,8 +73,8 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
     }
 
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     @Override
     protected String createContainsAllValuesExpression(ContainsAllValuesFilter filter, boolean not) {
         return null;
@@ -134,7 +133,7 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
      */
     @Override
     protected String createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter,
-            boolean not) {
+                                                        boolean not) {
         return null;
     }
 

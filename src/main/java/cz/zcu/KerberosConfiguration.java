@@ -33,83 +33,71 @@ import org.identityconnectors.framework.spi.ConfigurationProperty;
 /**
  * Extends the {@link AbstractConfiguration} class to provide all the necessary
  * parameters to initialize the Kerberos Connector.
- *
  */
 public class KerberosConfiguration extends AbstractConfiguration {
+	// Exposed configuration properties.
 
+	/**
+	 * Kerberos realm to work with.
+	 */
+	private String realm;
 
-    // Exposed configuration properties.
+	/**
+	 * The principal to authenticate with.
+	 */
+	private String principal = null;
 
-    /**
-     * The connector to connect to.
-     */
-    private String host;
+	/**
+	 * The keytab to authenticate with.
+	 */
+	private GuardedString keytab = null;
 
-    /**
-     * The Remote user to authenticate with.
-     */
-    private String remoteUser = null;
+	/**
+	 * Constructor.
+	 */
+	public KerberosConfiguration() {
 
-    /**
-     * The Password to authenticate with.
-     */
-    private GuardedString password = null;
+	}
 
+	@ConfigurationProperty(order = 1, displayMessageKey = "host.display",
+			groupMessageKey = "basic.group", helpMessageKey = "host.help",
+			required = true, confidential = false)
+	public String getRealm() {
+		return realm;
+	}
 
-    /**
-     * Constructor.
-     */
-    public KerberosConfiguration() {
+	public void setRealm(String realm) {
+		this.realm = realm;
+	}
 
-    }
+	@ConfigurationProperty(order = 2, displayMessageKey = "remoteUser.display",
+			groupMessageKey = "basic.group", helpMessageKey = "remoteUser.help",
+			required = true, confidential = false)
+	public String getPrincipal() {
+		return principal;
+	}
 
+	public void setPrincipal(String principal) {
+		this.principal = principal;
+	}
 
-    @ConfigurationProperty(order = 1, displayMessageKey = "host.display",
-            groupMessageKey = "basic.group", helpMessageKey = "host.help",
-            required = true, confidential = false)
-    public String getHost() {
-        return host;
-    }
+	@ConfigurationProperty(order = 3, displayMessageKey = "password.display",
+			groupMessageKey = "basic.group", helpMessageKey = "password.help",
+			confidential = true)
+	public GuardedString getKeytab() {
+		return keytab;
+	}
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+	public void setKeytab(GuardedString keytab) {
+		this.keytab = keytab;
+	}
 
-
-    @ConfigurationProperty(order = 2, displayMessageKey = "remoteUser.display",
-            groupMessageKey = "basic.group", helpMessageKey = "remoteUser.help",
-            required = true, confidential = false)
-    public String getRemoteUser() {
-        return remoteUser;
-    }
-
-    public void setRemoteUser(String remoteUser) {
-        this.remoteUser = remoteUser;
-    }
-
-    @ConfigurationProperty(order = 3, displayMessageKey = "password.display",
-            groupMessageKey = "basic.group", helpMessageKey = "password.help",
-            confidential = true)
-    public GuardedString getPassword() {
-        return password;
-    }
-
-    public void setPassword(GuardedString password) {
-        this.password = password;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void validate() {
-        if (StringUtil.isBlank(host)) {
-            throw new IllegalArgumentException("Host cannot be null or empty.");
-        }
-
-        Assertions.blankCheck(remoteUser, "remoteUser");
-
-        Assertions.nullCheck(password, "password");
-    }
-
-
+	/**
+	 * {@inheritDoc}
+	 */
+	public void validate() {
+		Assertions.nullCheck(keytab, "keytab");
+		Assertions.blankCheck(realm, "realm");
+		Assertions.blankCheck(principal, "principal");
+	}
 }

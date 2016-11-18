@@ -85,168 +85,162 @@ import org.identityconnectors.framework.spi.operations.UpdateOp;
 
 /**
  * Main implementation of the Kerberos Connector.
- *
  */
 @ConnectorClass(
-        displayNameKey = "Kerberos.connector.display",
-        configurationClass = KerberosConfiguration.class)
+		displayNameKey = "Kerberos.connector.display",
+		configurationClass = KerberosConfiguration.class)
 public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, TestOp, UpdateOp {
 
-    /**
-     * Setup logging for the {@link KerberosConnector}.
-     */
-    private static final Log logger = Log.getLog(KerberosConnector.class);
+	/**
+	 * Setup logging for the {@link KerberosConnector}.
+	 */
+	private static final Log logger = Log.getLog(KerberosConnector.class);
 
-    /**
-     * Place holder for the {@link Configuration} passed into the init() method
-     * {@link KerberosConnector#init(org.identityconnectors.framework.spi.Configuration)}.
-     */
-    private KerberosConfiguration configuration;
+	/**
+	 * Place holder for the {@link Configuration} passed into the init() method
+	 * {@link KerberosConnector#init(org.identityconnectors.framework.spi.Configuration)}.
+	 */
+	private KerberosConfiguration configuration;
 
-    private Schema schema = null;
+	private Schema schema = null;
 
-    /**
-     * Gets the Configuration context for this connector.
-     *
-     * @return The current {@link Configuration}
-     */
-    public Configuration getConfiguration() {
-        return this.configuration;
-    }
+	/**
+	 * Gets the Configuration context for this connector.
+	 *
+	 * @return The current {@link Configuration}
+	 */
+	public Configuration getConfiguration() {
+		return this.configuration;
+	}
 
-    /**
-     * Callback method to receive the {@link Configuration}.
-     *
-     * @param configuration the new {@link Configuration}
-     * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
-     */
-    public void init(final Configuration configuration) {
-        this.configuration = (KerberosConfiguration) configuration;
-    }
+	/**
+	 * Callback method to receive the {@link Configuration}.
+	 *
+	 * @param configuration the new {@link Configuration}
+	 * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
+	 */
+	public void init(final Configuration configuration) {
+		this.configuration = (KerberosConfiguration) configuration;
 
-    /**
-     * Disposes of the {@link KerberosConnector}'s resources.
-     *
-     * @see org.identityconnectors.framework.spi.Connector#dispose()
-     */
-    public void dispose() {
-        configuration = null;
-    }
+	}
 
+	/**
+	 * Disposes of the {@link KerberosConnector}'s resources.
+	 *
+	 * @see org.identityconnectors.framework.spi.Connector#dispose()
+	 */
+	public void dispose() {
+		configuration = null;
+	}
 
-    /******************
-     * SPI Operations
-     *
-     * Implement the following operations using the contract and
-     * description found in the Javadoc for these methods.
-     ******************/
+	/******************
+	 * SPI Operations
+	 *
+	 * Implement the following operations using the contract and
+	 * description found in the Javadoc for these methods.
+	 ******************/
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
+	                  final OperationOptions options) {
+		if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
+			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
+			if (name != null) {
+				// do real create here
+				return new Uid(AttributeUtil.getStringValue(name).toLowerCase(Locale.US));
+			} else {
+				throw new InvalidAttributeValueException("Name attribute is required");
+			}
+		} else {
+			logger.warn("Create of type {0} is not supported", configuration.getConnectorMessages()
+					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Create of type"
+					+ objectClass.getObjectClassValue() + " is not supported");
+		}
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
+		if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
+			// do real delete here
+		} else {
+			logger.warn("Delete of type {0} is not supported", configuration.getConnectorMessages()
+					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Delete of type"
+					+ objectClass.getObjectClassValue() + " is not supported");
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
-            final OperationOptions options) {
-        if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
-            Name name = AttributeUtil.getNameFromAttributes(createAttributes);
-            if (name != null) {
-                // do real create here
-                return new Uid(AttributeUtil.getStringValue(name).toLowerCase(Locale.US));
-            } else {
-                throw new InvalidAttributeValueException("Name attribute is required");
-            }
-        } else {
-            logger.warn("Create of type {0} is not supported", configuration.getConnectorMessages()
-                    .format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-            throw new UnsupportedOperationException("Create of type"
-                    + objectClass.getObjectClassValue() + " is not supported");
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass,
+	                                                       OperationOptions options) {
+		return new KerberosFilterTranslator();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-        if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
-            // do real delete here
-        } else {
-            logger.warn("Delete of type {0} is not supported", configuration.getConnectorMessages()
-                    .format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-            throw new UnsupportedOperationException("Delete of type"
-                    + objectClass.getObjectClassValue() + " is not supported");
-        }
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
+	                         OperationOptions options) {
+		final ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
+		builder.setUid("3f50eca0-f5e9-11e3-a3ac-0800200c9a66");
+		builder.setName("Foo");
+		builder.addAttribute(AttributeBuilder.buildEnabled(true));
 
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass,
-            OperationOptions options) {
-        return new KerberosFilterTranslator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
-            OperationOptions options) {
-        final ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-        builder.setUid("3f50eca0-f5e9-11e3-a3ac-0800200c9a66");
-        builder.setName("Foo");
-        builder.addAttribute(AttributeBuilder.buildEnabled(true));
-
-        for (ConnectorObject connectorObject : CollectionUtil.newSet(builder.build())) {
-            if (!handler.handle(connectorObject)) {
-                // Stop iterating because the handler stopped processing
-                break;
-            }
-        }
-        if (options.getPageSize() != null && 0 < options.getPageSize()) {
-            logger.info("Paged Search was requested");
-            ((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
-        }
-    }
+		for (ConnectorObject connectorObject : CollectionUtil.newSet(builder.build())) {
+			if (!handler.handle(connectorObject)) {
+				// Stop iterating because the handler stopped processing
+				break;
+			}
+		}
+		if (options.getPageSize() != null && 0 < options.getPageSize()) {
+			logger.info("Paged Search was requested");
+			((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
+		}
+	}
 
 
-    /**
-     * {@inheritDoc}
-     */
-    public void test() {
-        logger.ok("Test works well");
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	public void test() {
+		logger.ok("Test works well");
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
-            OperationOptions options) {
-        AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
-        Name newName = attributesAccessor.getName();
-        Uid uidAfterUpdate = uid;
-        if (newName != null) {
-            logger.info("Rename the object {0}:{1} to {2}", objectClass.getObjectClassValue(), uid
-                    .getUidValue(), newName.getNameValue());
-            uidAfterUpdate = new Uid(newName.getNameValue().toLowerCase(Locale.US));
-        }
+	/**
+	 * {@inheritDoc}
+	 */
+	public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
+	                  OperationOptions options) {
+		AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
+		Name newName = attributesAccessor.getName();
+		Uid uidAfterUpdate = uid;
+		if (newName != null) {
+			logger.info("Rename the object {0}:{1} to {2}", objectClass.getObjectClassValue(), uid
+					.getUidValue(), newName.getNameValue());
+			uidAfterUpdate = new Uid(newName.getNameValue().toLowerCase(Locale.US));
+		}
 
-        if (ObjectClass.ACCOUNT.equals(objectClass)) {
+		if (ObjectClass.ACCOUNT.equals(objectClass)) {
 
-        } else if (ObjectClass.GROUP.is(objectClass.getObjectClassValue())) {
-            if (attributesAccessor.hasAttribute("members")) {
-                throw new InvalidAttributeValueException(
-                        "Requested to update a read only attribute");
-            }
-        } else {
-            logger.warn("Update of type {0} is not supported", configuration.getConnectorMessages()
-                    .format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-            throw new UnsupportedOperationException("Update of type"
-                    + objectClass.getObjectClassValue() + " is not supported");
-        }
-        return uidAfterUpdate;
-    }
+		} else if (ObjectClass.GROUP.is(objectClass.getObjectClassValue())) {
+			if (attributesAccessor.hasAttribute("members")) {
+				throw new InvalidAttributeValueException(
+						"Requested to update a read only attribute");
+			}
+		} else {
+			logger.warn("Update of type {0} is not supported", configuration.getConnectorMessages()
+					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Update of type"
+					+ objectClass.getObjectClassValue() + " is not supported");
+		}
+		return uidAfterUpdate;
+	}
 
 }
