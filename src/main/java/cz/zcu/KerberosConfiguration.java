@@ -75,8 +75,8 @@ public class KerberosConfiguration extends AbstractConfiguration {
 		this.realm = realm;
 	}
 
-	@ConfigurationProperty(order = 2, displayMessageKey = "remoteUser.display",
-			groupMessageKey = "basic.group", helpMessageKey = "remoteUser.help",
+	@ConfigurationProperty(order = 2, displayMessageKey = "adminPrincipal.display",
+			groupMessageKey = "basic.group", helpMessageKey = "adminPrincipal.help",
 			required = true, confidential = false)
 	public String getPrincipal() {
 		return principal;
