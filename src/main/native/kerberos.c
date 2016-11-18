@@ -39,6 +39,15 @@ krb5_error_code krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 	if (code != 0) return code;
 	ctx->krb = krb;
 
+	if (!config->realm) {
+		char *realm;
+
+		code = krb5_get_default_realm(krb, &realm);
+		if (code != 0) return code;
+		config->realm = strdup(realm);
+		krb5_free_default_realm(krb, realm);
+	}
+
 	memset(&params, 0, sizeof params);
 	params.mask |= KADM5_CONFIG_REALM;
 	params.realm = config->realm;
@@ -54,21 +63,34 @@ krb5_error_code krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 }
 
 
+static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal principal, char **name) {
+	char *s;
+	krb5_error_code code;
+
+	if ((code = krb5_unparse_name(krb, principal, &s)) != 0) return code;
+	*name = strdup(s);
+	krb5_free_unparsed_name(krb, s);
+
+	return 0;
+}
+
+
 krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
 	krb5_error_code code;
 	krb5_principal principal;
 	kadm5_principal_ent_rec krbresult;
-	char *s;
 
 	code = krb5_parse_name(ctx->krb, princ_name, &principal);
 	if (code) return code;
 
 	code = kadm5_get_principal(ctx->handle, principal, &krbresult, KADM5_PRINCIPAL_NORMAL_MASK/* | KADM5_KEY_DATA*/);
+	krb5_free_principal(ctx->krb, principal);
 	if (code) return code;
 
-	if ((code = krb5_unparse_name(ctx->krb, krbresult.principal, &s)) != 0) return code;
-	result->name = strdup(s);
-	krb5_free_unparsed_name(ctx->krb, s);
+	memset(result, 0, sizeof(*result));
+	if ((code = krbconn_princ2str(ctx->krb, krbresult.principal, &result->name)) != 0) return code;
+
+	kadm5_free_principal_ent(ctx->handle, &krbresult);
 
 	return 0;
 }
@@ -90,12 +112,34 @@ void krbconn_destroy(krbconn_context_t *ctx) {
 }
 
 
+void krbconn_free_config(krbconn_config_t *config) {
+	free(config->keytab);
+	free(config->principal);
+	free(config->password);
+	free(config->realm);
+}
+
+
+void krbconn_free_principal(krbconn_principal_t *principal) {
+	free(principal->name);
+	free(principal->mod_name);
+	memset(principal, 0, sizeof(*principal));
+}
+
+
+void usage(const char *name) {
+	printf("Usage: %s [OPTIONS]\n\
+OPTIONS are:\n\
+  -h ............. usage\n\
+  -k FILE ........ keytab file\n\
+  -u PRINCIPAL ... admin principal\n\
+  -p PASSWORD .... admin password\n\
+", name);
+}
+
+
 int main(int argc, char **argv) {
-	krbconn_config_t config; /* = {
-		keytab: "/home/valtri/krb5.keytab",
-		principal: "host/forkys2.zcu.cz",
-		realm: "ZCU.CZ",
-	};*/
+	krbconn_config_t config;
 	krbconn_context_t ctx;
 	krb5_error_code code;
 	char *err;
@@ -103,8 +147,11 @@ int main(int argc, char **argv) {
 	char c;
 
 	memset(&config, 0, sizeof config);
-	while ((c = getopt(argc, argv, "u:p:k:r:")) != -1) {
+	while ((c = getopt(argc, argv, "hu:p:k:r:")) != -1) {
 		switch(c) {
+			case 'h':
+				usage(argv[0]);
+				return 0;
 			case 'k':
 				config.keytab = strdup(optarg);
 				break;
@@ -118,6 +165,13 @@ int main(int argc, char **argv) {
 				config.realm = strdup(optarg);
 				break;
 		}
+	}
+	if (!config.keytab && !config.password) {
+		usage(argv[0]);
+		printf("\n");
+		printf("Keytab file or password required\n");
+		krbconn_free_config(&config);
+		return 1;
 	}
 
 	if ((code = krbconn_init(&ctx, &config)) != 0) {
@@ -134,10 +188,9 @@ int main(int argc, char **argv) {
 		return code;
 	}
 	printf("Principal: %s\n", principal.name);
+	krbconn_free_principal(&principal);
 
 	krbconn_destroy(&ctx);
-	free(config.keytab);
-	free(config.principal);
-	free(config.password);
+	krbconn_free_config(&config);
 	return 0;
 }
