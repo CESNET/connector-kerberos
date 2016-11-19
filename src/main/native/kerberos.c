@@ -3,8 +3,8 @@ if test -z "${JAVA_HOME}"; then JAVA_HOME=/usr/lib/jvm/java; fi
 CPPFLAGS="-I. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -D_GNU_SOURCE"
 CFLAGS="-fPIC -W -Wall -g -O2"
 LIBS="-lkrb5 -lkadm5clnt_mit"
-gcc $CPPFLAGS $CFLAGS -DKRBCONN_TEST $0 -o krbconn_test $LIBS || exit $?
-gcc $CPPFLAGS $CFLAGS $0 -o libkerberos-connector.so -shared -Wl,-soname,libkerberos-connector.so $LIBS || exit $?
+gcc $CPPFLAGS $CFLAGS -DKRBCONN_TEST java_access.c $0 -o krbconn_test $LIBS || exit $?
+gcc $CPPFLAGS $CFLAGS java_access.c $0 -o libkerberos-connector.so -shared -Wl,-soname,libkerberos-connector.so $LIBS || exit $?
 exit 0
 */
 #include <getopt.h>
@@ -16,6 +16,7 @@ exit 0
 #include <profile.h>
 #include "kerberos.h"
 #include "cz_zcu_KerberosConnector.h"
+#include "java_access.h"
 
 
 char *krbconn_error(krbconn_context_t *ctx, krb5_error_code code) {
@@ -141,8 +142,15 @@ krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_pr
 	return 0;
 }
 
+void krbconn_fill_config(krbconn_config_t* conf, jclass gs_accessor) {
+	conf->realm = jstring_getter(config, "getRealm");
+	conf->principal = jstring_getter(config, "getPrincipal");
+	conf->password = jguardedstring_getter(config, "getPassword", gs_accessor);
+	conf->keytab = jstring_getter(config, "getKeytab");
+}
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this) {
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = calloc(sizeof(krbconn_context_t), 1);
 	krbconn_config_t conf;
 	char* err;
@@ -158,29 +166,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 	cls = (*env)->GetObjectClass(env, config);
 
-	fid = (*env)->GetFieldID(env, cls, "realm", "Ljava/lang/String");
-	str = (*env)->GetObjectField(env, cls, fid);
-	const char* realm = (*env)->GetStringUTFChars(env, str, 0);
-	conf.realm = strdup(realm);
-	(*env)->ReleaseStringUTFChars(env, str, realm);
-
-	fid = (*env)->GetFieldID(env, cls, "principal", "Ljava/lang/String");
-	str = (*env)->GetObjectField(env, cls, fid);
-	const char* principal = (*env)->GetStringUTFChars(env, str, 0);
-	conf.principal = strdup(principal);
-	(*env)->ReleaseStringUTFChars(env, str, principal);
-
-	fid = (*env)->GetFieldID(env, cls, "password", "Ljava/lang/String");
-	str = (*env)->GetObjectField(env, cls, fid);
-	const char* password = (*env)->GetStringUTFChars(env, str, 0);
-	conf.password = strdup(password);
-	(*env)->ReleaseStringUTFChars(env, str, password);
-
-	fid = (*env)->GetFieldID(env, cls, "keytab", "Ljava/lang/String");
-	str = (*env)->GetObjectField(env, cls, fid);
-	const char* keytab = (*env)->GetStringUTFChars(env, str, 0);
-	conf.keytab = strdup(keytab);
-	(*env)->ReleaseStringUTFChars(env, str, keytab);
+	krbconn_fill_config(&conf, gs_accessor);
 
 	//Initialize context
 	krb5_error_code code;
@@ -202,11 +188,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, jobject this) {
-	jfieldID fid;
-	jclass cls;
-
-	cls = (*env)->GetObjectClass(env, this);
-	fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	jclass cls = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
 	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
 
 	krbconn_destroy(ctx);
@@ -215,7 +198,11 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, 
 
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this) {
+	jclass cls = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
 
+	//TODO: actually renew the ticket
 }
 
 #ifdef KRBCONN_TEST

@@ -81,7 +81,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void init(final Configuration configuration) {
 		this.configuration = (KerberosConfiguration) configuration;
-		krb5_init();
+		krb5_init(GuardedStringAccessor.class);
 	}
 
 	/**
@@ -94,7 +94,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		configuration = null;
 	}
 
-	private native void krb5_init();
+	private native void krb5_init(Class gsAccessor);
 	private native void krb5_destroy();
 	private native void krb5_renew();
 
@@ -242,5 +242,9 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		schemaBuilder.defineObjectClass(ociInfoAccount);
 
 		return schemaBuilder.build();
+	}
+
+	static {
+		System.loadLibrary("kerberos-connector");
 	}
 }

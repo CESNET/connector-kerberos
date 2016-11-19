@@ -13,7 +13,7 @@ extern "C" {
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jclass);
 
 /*
  * Class:     cz_zcu_KerberosConnector
