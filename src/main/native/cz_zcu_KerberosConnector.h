@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     cz_zcu_KerberosConnector
  * Method:    krb5_init
- * Signature: ()V
+ * Signature: (Ljava/lang/Class;)V
  */
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init
   (JNIEnv *, jobject, jclass);
