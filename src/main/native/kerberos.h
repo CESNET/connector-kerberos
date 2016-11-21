@@ -37,4 +37,5 @@ void krbconn_free_principal(krbconn_principal_t *principal);
 
 krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result);
 krb5_error_code krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass);
+krb5_error_code krbconn_delete(krbconn_context_t *ctx, char *name);
 #endif

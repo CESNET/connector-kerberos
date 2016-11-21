@@ -182,6 +182,17 @@ krb5_error_code krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info
 }
 
 
+krb5_error_code krbconn_delete(krbconn_context_t *ctx, char *name) {
+	krb5_principal krbname;
+	krb5_error_code code = 0;
+
+	if ((code = krb5_parse_name(ctx->krb, name, &krbname)) != 0) return code;
+	code = kadm5_delete_principal(ctx->handle, krbname);
+	krb5_free_principal(ctx->krb, krbname);
+	return code;
+}
+
+
 void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jclass gs_accessor) {
 	conf->realm = jstring_getter(env, config, "getRealm");
 	conf->principal = jstring_getter(env, config, "getPrincipal");
@@ -330,6 +341,15 @@ int main(int argc, char **argv) {
 			goto end;
 		}
 		printf("%s created\n", principal.name);
+	} else if (strcmp(command, "delete") == 0) {
+		principal.name = "host/pokuston.civ.zcu.cz@ZCU.CZ";
+		if ((code = krbconn_delete(&ctx, principal.name))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("%s deleted\n", principal.name);
 	}
 
 end:
