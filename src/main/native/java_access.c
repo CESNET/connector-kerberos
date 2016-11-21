@@ -29,6 +29,10 @@ char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass 
 	                                "(Lorg/identityconnectors/common/security/GuardedString;)Ljava/lang/String;");
 
 	jstring str = (*env)->CallStaticObjectMethod(env, accessor, mid, guarded);
+	if (str == NULL) {
+		// If password is empty, the method returns NULL
+		return NULL;
+	}
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);
 	char* out = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, str, temp);
