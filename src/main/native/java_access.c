@@ -10,6 +10,9 @@ char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	}
 
 	jstring str = (*env)->CallObjectMethod(env, obj, mid);
+	if (str == 0) {
+		return NULL;
+	}
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);
 	char* out = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, str, temp);
