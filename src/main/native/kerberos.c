@@ -1,7 +1,7 @@
 #define CC /*
 if test -z "${JAVA_HOME}"; then JAVA_HOME=/usr/lib/jvm/java; fi
 CPPFLAGS="-I. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -D_GNU_SOURCE"
-CFLAGS="-fPIC -W -Wall -g -O2"
+CFLAGS="-fPIC -W -Wall -g -O0"
 LIBS="-lkrb5 -lkadm5clnt_mit"
 gcc $CPPFLAGS $CFLAGS -DKRBCONN_TEST java_access.c $0 -o krbconn_test $LIBS || exit $?
 gcc $CPPFLAGS $CFLAGS java_access.c $0 -o libkerberos-connector.so -shared -Wl,-soname,libkerberos-connector.so $LIBS || exit $?
@@ -160,7 +160,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 	//Get configuration from KerberosConfiguration
 	cls = (*env)->GetObjectClass(env, this);
-	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration");
+	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
 	jobject config = (*env)->GetObjectField(env, this, fid);
 
 	cls = (*env)->GetObjectClass(env, config);
