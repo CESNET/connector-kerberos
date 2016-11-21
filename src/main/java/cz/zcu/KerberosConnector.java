@@ -64,6 +64,10 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 	private long contextPointer;
 
+	public long getContextPointer() {
+		return this.contextPointer;
+	}
+
 	/**
 	 * Gets the Configuration context for this connector.
 	 *
