@@ -250,8 +250,29 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, 
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this) {
 	krbconn_context_t* ctx = getContext(env, this);
+	krbconn_config_t conf;
+	jfieldID fid;
+	jclass cls;
 
-	//TODO: actually renew the ticket
+	//Get configuration from KerberosConfiguration
+	cls = (*env)->GetObjectClass(env, this);
+	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
+	jobject config = (*env)->GetObjectField(env, this, fid);
+
+	cls = (*env)->GetObjectClass(env, config);
+
+	krbconn_fill_config(env, config, &conf, gs_accessor);
+
+	long code;
+	if ((code = krbconn_renew(ctx, &conf)) != 0) {
+		err = krbconn_error(ctx, code);
+		printf("%s\n", err);
+		free(err);
+		//TODO: throw exception
+		return;
+	}
+
+	krbconn_free_config(&conf);
 }
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, jobject this, jstring name, jstring pass,
