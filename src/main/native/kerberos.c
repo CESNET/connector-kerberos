@@ -241,9 +241,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, jobject this) {
-	jclass cls = (*env)->GetObjectClass(env, this);
-	jfieldID fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
-	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
+	krbconn_context_t* ctx = getContext(env, this);
 
 	krbconn_destroy(ctx);
 	free(ctx);
@@ -251,9 +249,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, 
 
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this) {
-	jclass cls = (*env)->GetObjectClass(env, this);
-	jfieldID fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
-	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
+	krbconn_context_t* ctx = getContext(env, this);
 
 	//TODO: actually renew the ticket
 }

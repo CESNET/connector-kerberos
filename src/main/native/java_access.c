@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "cz_zcu_KerberosConnector.h"
+#include "java_access.h"
 
 char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	jclass cls = (*env)->GetObjectClass(env, obj);
@@ -41,4 +42,11 @@ char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass 
 	(*env)->ReleaseStringUTFChars(env, str, temp);
 
 	return out;
+}
+
+krbconn_context_t* getContext(JNIEnv* env, jobject this) {
+	jclass cls = (*env)->GetObjectClass(env, this);
+	jfieldID fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
+	return ctx;
 }
