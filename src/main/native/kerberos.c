@@ -254,6 +254,69 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 	//TODO: actually renew the ticket
 }
 
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, jobject this, jstring name, jstring pass,
+                                                                  jlong princ_expiry, jlong pass_expiry,
+                                                                  jint attrs, jstring policy) {
+	krbconn_context_t* ctx = getContext(env, this);
+	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
+
+	const char* temp;
+	char* str;
+
+	if (name != NULL) {
+		temp = (*env)->GetStringUTFChars(env, name, 0);
+		str = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, name, temp);
+		princ->name = str;
+	}
+
+	princ->princ_expire = princ_expiry;
+	princ->pwd_expire = pass_expiry;
+	princ->attributes = attrs;
+
+	if (policy != NULL) {
+		temp = (*env)->GetStringUTFChars(env, policy, 0);
+		str = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, policy, temp);
+		princ->policy = str;
+	}
+
+	if (pass != NULL) {
+		temp = (*env)->GetStringUTFChars(env, pass, 0);
+		str = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, pass, temp);
+	}
+
+	long err = krbconn_create(ctx, princ, str);
+	free(princ->name);
+	free(princ->policy);
+	free(str);
+	free(princ);
+
+	if (err != 0) {
+		//TODO: be exceptional
+	}
+}
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, jobject this, jstring name) {
+	krbconn_context_t* ctx = getContext(env, this);
+	const char* temp;
+	char* str;
+
+	if (name != NULL) {
+		temp = (*env)->GetStringUTFChars(env, name, 0);
+		str = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, name, temp);
+	}
+
+	long err = krbconn_delete(ctx, str);
+	free(str);
+
+	if (err != 0) {
+		//TODO: throw exception
+	}
+}
+
 #ifdef KRBCONN_TEST
 void usage(const char *name) {
 	printf("Usage: %s [OPTIONS] [get|create]\n\
