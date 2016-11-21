@@ -1,5 +1,11 @@
 #define CC /*
-if test -z "${JAVA_HOME}"; then JAVA_HOME=/usr/lib/jvm/java; fi
+if test -z "${JAVA_HOME}"; then
+	for JAVA_HOME in /usr/lib/jvm/java /usr/lib/jvm/default-java; do
+		if test -d ${JAVA_HOME}; then
+			break
+		fi
+	done
+fi
 CPPFLAGS="-I. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -D_GNU_SOURCE"
 CFLAGS="-fPIC -W -Wall -g -O0"
 LIBS="-lkrb5 -lkadm5clnt_mit"
