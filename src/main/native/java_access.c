@@ -1,6 +1,8 @@
+#include <string.h>
+
 #include "cz_zcu_KerberosConnector.h"
 
-char* jstring_getter(jobject obj, const char* name) {
+char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	jclass cls = (*env)->GetObjectClass(env, obj);
 	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Ljava/lang/String;");
 	if (mid == 0) {
@@ -15,7 +17,7 @@ char* jstring_getter(jobject obj, const char* name) {
 	return out;
 }
 
-char* jguardedstring_getter(jobject obj, const char* name, jclass accessor) {
+char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass accessor) {
 	jclass cls = (*env)->GetObjectClass(env, obj);
 	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Lorg/identityconnectors/common/security/GuardedString;");
 	if (mid == 0) {
@@ -24,7 +26,7 @@ char* jguardedstring_getter(jobject obj, const char* name, jclass accessor) {
 
 	jobject guarded = (*env)->CallObjectMethod(env, cls, mid);
 	mid = (*env)->GetStaticMethodID(env, accessor, "getString",
-	                                "(Lorg/identityconnectors/common/security/GuardedString;)Ljava/lang/String;")
+	                                "(Lorg/identityconnectors/common/security/GuardedString;)Ljava/lang/String;");
 
 	jstring str = (*env)->CallStaticObjectMethod(env, accessor, mid, guarded);
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);

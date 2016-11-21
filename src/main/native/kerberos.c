@@ -142,11 +142,11 @@ krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_pr
 	return 0;
 }
 
-void krbconn_fill_config(krbconn_config_t* conf, jclass gs_accessor) {
-	conf->realm = jstring_getter(config, "getRealm");
-	conf->principal = jstring_getter(config, "getPrincipal");
-	conf->password = jguardedstring_getter(config, "getPassword", gs_accessor);
-	conf->keytab = jstring_getter(config, "getKeytab");
+void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jclass gs_accessor) {
+	conf->realm = jstring_getter(env, config, "getRealm");
+	conf->principal = jstring_getter(env, config, "getPrincipal");
+	conf->password = jguardedstring_getter(env, config, "getPassword", gs_accessor);
+	conf->keytab = jstring_getter(env, config, "getKeytab");
 }
 
 
@@ -157,7 +157,6 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 	jfieldID fid;
 	jclass cls;
-	jstring str;
 
 	//Get configuration from KerberosConfiguration
 	cls = (*env)->GetObjectClass(env, this);
@@ -166,7 +165,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 	cls = (*env)->GetObjectClass(env, config);
 
-	krbconn_fill_config(&conf, gs_accessor);
+	krbconn_fill_config(env, config, &conf, gs_accessor);
 
 	//Initialize context
 	krb5_error_code code;
