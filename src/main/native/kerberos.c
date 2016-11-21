@@ -25,28 +25,51 @@ exit 0
 #include "java_access.h"
 
 
-char *krbconn_error(krbconn_context_t *ctx, krb5_error_code code) {
+char *krbconn_error(krbconn_context_t *ctx, long code) {
 	const char *krbmsg;
 	char *text;
 
 	if (ctx->krb) {
 		krbmsg = krb5_get_error_message(ctx->krb, code);
-		asprintf(&text, "Kerberos error %d: %s", code, krbmsg);
+		asprintf(&text, "Kerberos error %ld: %s", code, krbmsg);
 		krb5_free_error_message(ctx->krb, krbmsg);
 	} else {
-		asprintf(&text, "Kerberos error %d: (no details)", code);
+		asprintf(&text, "Kerberos error %ld: (no details)", code);
 	}
 
 	return text;
 }
 
 
-krb5_error_code krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
+long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
+	kadm5_config_params params;
+	kadm5_ret_t code = 0;
+	void *handle = NULL;
+
+	if (ctx->handle) {
+		kadm5_destroy(ctx->handle);
+		ctx->handle = NULL;
+	}
+
+	memset(&params, 0, sizeof params);
+	params.mask |= KADM5_CONFIG_REALM;
+	params.realm = config->realm;
+
+	if (config->keytab) {
+		code = kadm5_init_with_skey(ctx->krb, config->principal, config->keytab, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
+	} else if (config->password) {
+		code = kadm5_init_with_password(ctx->krb, config->principal, config->password, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
+	}
+	if (code != 0) return code;
+	ctx->handle = handle;
+
+	return 0;
+}
+
+
+long krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 	krb5_context krb = NULL;
 	krb5_error_code code;
-	//krb5_ccache ccache;
-	kadm5_config_params params;
-	void *handle = NULL;
 
 	memset(ctx, 0, sizeof(*ctx));
 	code = kadm5_init_krb5_context(&krb);
@@ -62,33 +85,13 @@ krb5_error_code krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 		krb5_free_default_realm(krb, realm);
 	}
 
-	memset(&params, 0, sizeof params);
-	params.mask |= KADM5_CONFIG_REALM;
-	params.realm = config->realm;
-	if (config->keytab) {
-		code = kadm5_init_with_skey(ctx->krb, config->principal, config->keytab, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
-	} else if (config->password) {
-		code = kadm5_init_with_password(ctx->krb, config->principal, config->password, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
-	}
-	if (code != 0) return code;
-	ctx->handle = handle;
-
-	return 0;
+	return krbconn_renew(ctx, config);
 }
 
 
 void krbconn_destroy(krbconn_context_t *ctx) {
 	if (ctx->handle) kadm5_destroy(ctx->handle);
-	if (ctx->krb) {
-		struct _profile_t *profile;
-
-		if (krb5_get_profile(ctx->krb, &profile) == 0) {
-			profile_release(profile);
-		} else {
-			puts("profil nende");
-		}
-		krb5_free_context(ctx->krb);
-	}
+	if (ctx->krb) krb5_free_context(ctx->krb);
 	memset(ctx, 0, sizeof(*ctx));
 }
 
@@ -121,8 +124,8 @@ static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal princi
 }
 
 
-krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
-	krb5_error_code code;
+long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
+	long code;
 	krb5_principal principal;
 	kadm5_principal_ent_rec krbresult;
 
@@ -149,11 +152,11 @@ krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_pr
 }
 
 
-krb5_error_code krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass) {
+long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass) {
 	kadm5_principal_ent_rec krbprinc;
 	krb5_principal krbname;
 	long mask = 0;
-	krb5_error_code code;
+	long code;
 
 	if ((code = krb5_parse_name(ctx->krb, info->name, &krbname)) != 0) return code;
 
@@ -182,9 +185,9 @@ krb5_error_code krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info
 }
 
 
-krb5_error_code krbconn_delete(krbconn_context_t *ctx, char *name) {
+long krbconn_delete(krbconn_context_t *ctx, char *name) {
 	krb5_principal krbname;
-	krb5_error_code code = 0;
+	long code = 0;
 
 	if ((code = krb5_parse_name(ctx->krb, name, &krbname)) != 0) return code;
 	code = kadm5_delete_principal(ctx->handle, krbname);
@@ -219,7 +222,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 	krbconn_fill_config(env, config, &conf, gs_accessor);
 
 	//Initialize context
-	krb5_error_code code;
+	long code;
 	if ((code = krbconn_init(ctx, &conf)) != 0) {
 		err = krbconn_error(ctx, code);
 		printf("%s\n", err);
@@ -270,7 +273,7 @@ OPTIONS are:\n\
 int main(int argc, char **argv) {
 	krbconn_config_t config;
 	krbconn_context_t ctx;
-	krb5_error_code code = 0;
+	long code = 0;
 	char *err;
 	krbconn_principal_t principal;
 	char c;
@@ -298,6 +301,13 @@ int main(int argc, char **argv) {
 	}
 	if (optind < argc) {
 		command = argv[optind];
+	}
+	if (!config.principal) {
+		usage(argv[0]);
+		printf("\n");
+		printf("Admin principal name required\n");
+		krbconn_free_config(&config);
+		return 1;
 	}
 	if (!config.keytab && !config.password) {
 		usage(argv[0]);
