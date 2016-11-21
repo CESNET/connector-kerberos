@@ -9,7 +9,7 @@ char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 		return NULL;
 	}
 
-	jstring str = (*env)->CallObjectMethod(env, cls, mid);
+	jstring str = (*env)->CallObjectMethod(env, obj, mid);
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);
 	char* out = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, str, temp);
@@ -24,7 +24,7 @@ char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass 
 		return NULL;
 	}
 
-	jobject guarded = (*env)->CallObjectMethod(env, cls, mid);
+	jobject guarded = (*env)->CallObjectMethod(env, obj, mid);
 	mid = (*env)->GetStaticMethodID(env, accessor, "getString",
 	                                "(Lorg/identityconnectors/common/security/GuardedString;)Ljava/lang/String;");
 
