@@ -148,6 +148,40 @@ krb5_error_code krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_pr
 	return 0;
 }
 
+
+krb5_error_code krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass) {
+	kadm5_principal_ent_rec krbprinc;
+	krb5_principal krbname;
+	long mask = 0;
+	krb5_error_code code;
+
+	if ((code = krb5_parse_name(ctx->krb, info->name, &krbname)) != 0) return code;
+
+	memset(&krbprinc, 0, sizeof krbprinc);
+	krbprinc.principal = krbname;
+	mask |= KADM5_PRINCIPAL;
+	if (info->princ_expire) {
+		mask |= KADM5_PRINC_EXPIRE_TIME;
+		krbprinc.princ_expire_time = info->princ_expire;
+	}
+	if (info->pwd_expire) {
+		mask |= KADM5_PW_EXPIRATION;
+		krbprinc.pw_expiration = info->pwd_expire;
+	}
+	if (info->attributes) {
+		mask |= KADM5_ATTRIBUTES;
+		krbprinc.attributes = info->attributes;
+	}
+	if (info->policy) {
+		mask |= KADM5_POLICY;
+		krbprinc.policy = info->policy;
+	}
+	code = kadm5_create_principal(ctx->handle, &krbprinc, mask, pass);
+	krb5_free_principal(ctx->krb, krbname);
+	return code;
+}
+
+
 void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jclass gs_accessor) {
 	conf->realm = jstring_getter(env, config, "getRealm");
 	conf->principal = jstring_getter(env, config, "getPrincipal");
@@ -212,7 +246,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 
 #ifdef KRBCONN_TEST
 void usage(const char *name) {
-	printf("Usage: %s [OPTIONS]\n\
+	printf("Usage: %s [OPTIONS] [get|create]\n\
 OPTIONS are:\n\
   -h ............. usage\n\
   -k FILE ........ keytab file\n\
@@ -225,10 +259,11 @@ OPTIONS are:\n\
 int main(int argc, char **argv) {
 	krbconn_config_t config;
 	krbconn_context_t ctx;
-	krb5_error_code code;
+	krb5_error_code code = 0;
 	char *err;
 	krbconn_principal_t principal;
 	char c;
+	const char *command = "get";
 
 	memset(&config, 0, sizeof config);
 	while ((c = getopt(argc, argv, "hu:p:k:r:")) != -1) {
@@ -250,6 +285,9 @@ int main(int argc, char **argv) {
 				break;
 		}
 	}
+	if (optind < argc) {
+		command = argv[optind];
+	}
 	if (!config.keytab && !config.password) {
 		usage(argv[0]);
 		printf("\n");
@@ -265,24 +303,38 @@ int main(int argc, char **argv) {
 		return code;
 	}
 
-	if ((code = krbconn_get(&ctx, "majlen", &principal))) {
-		err = krbconn_error(&ctx, code);
-		printf("%s\n", err);
-		free(err);
-		return code;
+	if (strcmp(command, "get") == 0) {
+		if ((code = krbconn_get(&ctx, "majlen", &principal))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("Principal:       %s\n", principal.name);
+		printf("Expire:          %s", ctime(&principal.princ_expire));
+		printf("Modified:        %s", ctime(&principal.mod_date));
+		printf("Modified by:     %s\n", principal.mod_name);
+		printf("Password change: %s", ctime(&principal.pwd_change));
+		printf("Password expire: %s", ctime(&principal.pwd_expire));
+		printf("Attributes:      %d\n", principal.attributes);
+		printf("Policy:          %s\n", principal.policy);
+		krbconn_free_principal(&principal);
+	} else if (strcmp(command, "create") == 0) {
+		memset(&principal, 0, sizeof principal);
+		principal.name = "host/pokuston.civ.zcu.cz@ZCU.CZ";
+		principal.policy = "default_nohistory";
+		if ((code = krbconn_create(&ctx, &principal, NULL))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("%s created\n", principal.name);
 	}
-	printf("Principal:       %s\n", principal.name);
-	printf("Expire:          %s", ctime(&principal.princ_expire));
-	printf("Modified:        %s", ctime(&principal.mod_date));
-	printf("Modified by:     %s\n", principal.mod_name);
-	printf("Password change: %s", ctime(&principal.pwd_change));
-	printf("Password expire: %s", ctime(&principal.pwd_expire));
-	printf("Attributes:      %d\n", principal.attributes);
-	printf("Policy:          %s\n", principal.policy);
-	krbconn_free_principal(&principal);
 
+end:
 	krbconn_destroy(&ctx);
 	krbconn_free_config(&config);
-	return 0;
+	return code;
 }
 #endif
