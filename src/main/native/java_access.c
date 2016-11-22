@@ -51,8 +51,15 @@ krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 	return ctx;
 }
 
-void add_princ_to_array(JNIEnv* env, jobjectArray array, krbconn_principal_t princ, jclass clazz) {
+void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_principal_t princ, jclass clazz) {
 	jmethodID mid = (*env)->GetMethodID(env, clazz, "<init>", "(Ljava/lang/String;JJLjava/lang/String;JILjava/lang/String)V");
 
-	jobject jPrinc = (*env)->NewObject(env, clazz, mid, ...);
+	jstring name = (*env)->NewStringUTF(env, princ.name);
+	jstring modifyPrincipal = (*env)->NewStringUTF(env, princ.mod_name);
+	jstring policy = (*env)->NewStringUTF(env, princ.policy);
+
+	jobject jPrinc = (*env)->NewObject(env, clazz, mid, name, princ.princ_expire, princ.pwd_expire, princ.pwd_change,
+	                                   modifyPrincipal, princ.mod_date, princ.attributes, policy);
+
+	(*env)->SetObjectArrayElement(env, array, pos, jPrinc);
 }

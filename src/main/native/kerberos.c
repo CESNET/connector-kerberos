@@ -352,16 +352,18 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 
 JNIEXPORT jobjectArray JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query) {
 	krbconn_context_t* ctx = getContext(env, this);
-	const char* cQuery = NULL;
+	char* cQuery = NULL;
 	if (query != NULL) {
-		cQuery = (*env)->GetStringUTFChars(env, query, 0);
+		const char* temp = (*env)->GetStringUTFChars(env, query, 0);
+		cQuery = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, query, temp);
 	}
 
 	char** list;
 	int count;
 	krbconn_list(ctx, cQuery, &list, &count);
 
-	jclass arrClass = (*env)->FindClass("Lcz/zcu/KerberosPrincipal");
+	jclass arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
 	jobjectArray arr = (*env)->NewObjectArray(env, count, arrClass, NULL);
 
 	for (int i = 0; i < count; i++) {
@@ -369,8 +371,8 @@ JNIEXPORT jobjectArray JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv
 		memset(&princ, 0, sizeof(princ));
 
 		krbconn_get(ctx, list[i], &princ);
-		add_princ_to_array(env, arr, princ);
-		krbconn_free_principal(env, arr, &princ, arrClass);
+		add_princ_to_array(env, arr, i, princ, arrClass);
+		krbconn_free_principal(&princ);
 	}
 
 	krbconn_free_list(ctx, list, count);
