@@ -26,10 +26,10 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy
 /*
  * Class:     cz_zcu_KerberosConnector
  * Method:    krb5_renew
- * Signature: ()V
+ * Signature: (Ljava/lang/Class;)V
  */
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jclass);
 
 /*
  * Class:     cz_zcu_KerberosConnector

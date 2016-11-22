@@ -97,7 +97,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 	private native void krb5_init(Class gsAccessor);
 	private native void krb5_destroy();
-	private native void krb5_renew();
+	private native void krb5_renew(Class gsAccessor);
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy);
 	private native void krb5_delete(String name);
 	private native KerberosPrincipal[] krb5_search(String query);
@@ -157,8 +157,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
 	                         OperationOptions options) {
-		final ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-
 		KerberosPrincipal[] principals = krb5_search(query);
 
 		for (KerberosPrincipal principal: principals) {

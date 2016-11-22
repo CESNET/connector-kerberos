@@ -260,7 +260,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, 
 }
 
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this) {
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = getContext(env, this);
 	krbconn_config_t conf;
 	jfieldID fid;
@@ -277,7 +277,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 
 	long code;
 	if ((code = krbconn_renew(ctx, &conf)) != 0) {
-		err = krbconn_error(ctx, code);
+		char* err = krbconn_error(ctx, code);
 		printf("%s\n", err);
 		free(err);
 		//TODO: throw exception
