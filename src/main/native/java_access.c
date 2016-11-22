@@ -50,3 +50,9 @@ krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
 	return ctx;
 }
+
+void add_princ_to_array(JNIEnv* env, jobjectArray array, krbconn_principal_t princ, jclass clazz) {
+	jmethodID mid = (*env)->GetMethodID(env, clazz, "<init>", "(Ljava/lang/String;JJLjava/lang/String;JILjava/lang/String)V");
+
+	jobject jPrinc = (*env)->NewObject(env, clazz, mid, ...);
+}

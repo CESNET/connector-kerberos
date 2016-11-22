@@ -24,10 +24,7 @@
 
 package cz.zcu;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
@@ -103,6 +100,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	private native void krb5_renew();
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy);
 	private native void krb5_delete(String name);
+	private native KerberosPrincipal[] krb5_search(String query);
 
 	/******************
 	 * SPI Operations
@@ -160,16 +158,16 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
 	                         OperationOptions options) {
 		final ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
-		builder.setUid("3f50eca0-f5e9-11e3-a3ac-0800200c9a66");
-		builder.setName("Foo");
-		builder.addAttribute(AttributeBuilder.buildEnabled(true));
 
-		for (ConnectorObject connectorObject : CollectionUtil.newSet(builder.build())) {
-			if (!handler.handle(connectorObject)) {
-				// Stop iterating because the handler stopped processing
+		KerberosPrincipal[] principals = krb5_search(query);
+
+		for (KerberosPrincipal principal: principals) {
+			if (!handler.handle(principal.toConnectorObject())) {
+				//Stop iterating because the handler stopped processing
 				break;
 			}
 		}
+
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
 			logger.info("Paged Search was requested");
 			((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
