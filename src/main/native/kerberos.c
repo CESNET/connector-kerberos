@@ -196,6 +196,18 @@ long krbconn_delete(krbconn_context_t *ctx, char *name) {
 }
 
 
+long krbconn_list(krbconn_context_t *ctx, char *search, char ***list, int *count) {
+	*list = NULL;
+	*count = 0;
+	return kadm5_get_principals(ctx->handle, search, list, count);
+}
+
+
+void krbconn_free_list(krbconn_context_t *ctx, char **list, int count) {
+	kadm5_free_name_list(ctx->handle, list, count);
+}
+
+
 void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jclass gs_accessor) {
 	conf->realm = jstring_getter(env, config, "getRealm");
 	conf->principal = jstring_getter(env, config, "getPrincipal");
@@ -440,6 +452,21 @@ int main(int argc, char **argv) {
 			goto end;
 		}
 		printf("%s deleted\n", principal.name);
+	} else if (strcmp(command, "list") == 0) {
+		char **list;
+		int i, count;
+
+		if ((code = krbconn_list(&ctx, "*_adm", &list, &count))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		for (i = 0; i < count; i++) {
+			printf("%s ", list[i]);
+		}
+		printf("\n");
+		krbconn_free_list(&ctx, list, count);
 	}
 
 end:

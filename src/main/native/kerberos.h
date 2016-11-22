@@ -39,4 +39,6 @@ void krbconn_free_principal(krbconn_principal_t *principal);
 long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result);
 long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass);
 long krbconn_delete(krbconn_context_t *ctx, char *name);
+long krbconn_list(krbconn_context_t *ctx, char *search, char ***list, int *count);
+void krbconn_free_list(krbconn_context_t *ctx, char **list, int count);
 #endif
