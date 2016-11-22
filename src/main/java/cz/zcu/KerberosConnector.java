@@ -28,6 +28,7 @@ import java.util.*;
 
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
@@ -114,13 +115,20 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
 	                  final OperationOptions options) {
-		if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
+		if (ObjectClass.ACCOUNT.equals(objectClass)) {
 			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
-			if (name != null) {
-				// do real create here
-				return new Uid(AttributeUtil.getStringValue(name).toLowerCase(Locale.US));
+			GuardedString password = AttributeUtil.getPasswordValue(createAttributes);
+			long principalExpiry = AttributeUtil.getLongValue(AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes));
+			long passwordExpiry = AttributeUtil.getLongValue(AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes));
+			int attributes = AttributeUtil.getIntegerValue(AttributeUtil.find("attributes", createAttributes));
+			String policy = AttributeUtil.getStringValue(AttributeUtil.find("policy", createAttributes));
+
+			if (name != null && password != null) {
+				krb5_create(name.getNameValue(), GuardedStringAccessor.getString(password), principalExpiry, passwordExpiry,
+						attributes, policy);
+				return new Uid(AttributeUtil.getStringValue(name).toLowerCase());
 			} else {
-				throw new InvalidAttributeValueException("Name attribute is required");
+				throw new InvalidAttributeValueException("Name and password attributes are required");
 			}
 		} else {
 			logger.warn("Create of type {0} is not supported", configuration.getConnectorMessages()
@@ -134,8 +142,8 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * {@inheritDoc}
 	 */
 	public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-		if (ObjectClass.ACCOUNT.equals(objectClass) || ObjectClass.GROUP.equals(objectClass)) {
-			// do real delete here
+		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+			krb5_delete(uid.getUidValue());
 		} else {
 			logger.warn("Delete of type {0} is not supported", configuration.getConnectorMessages()
 					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
