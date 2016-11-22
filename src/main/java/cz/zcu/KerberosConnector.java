@@ -26,7 +26,6 @@ package cz.zcu;
 
 import java.util.*;
 
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
@@ -45,7 +44,7 @@ import org.identityconnectors.framework.spi.operations.*;
 @ConnectorClass(
 		displayNameKey = "Kerberos.connector.display",
 		configurationClass = KerberosConfiguration.class)
-public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, TestOp, UpdateOp, SchemaOp {
+public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, UpdateOp, SchemaOp {
 
 	/**
 	 * Setup logging for the {@link KerberosConnector}.
@@ -166,7 +165,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
 	                         OperationOptions options) {
 		KerberosPrincipal[] principals = krb5_search(query);
-
 		for (KerberosPrincipal principal: principals) {
 			if (!handler.handle(principal.toConnectorObject())) {
 				//Stop iterating because the handler stopped processing
@@ -178,13 +176,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			logger.info("Paged Search was requested");
 			((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
 		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void test() {
-		logger.ok("Test works well");
 	}
 
 	/**
@@ -203,11 +194,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
 
-		} else if (ObjectClass.GROUP.is(objectClass.getObjectClassValue())) {
-			if (attributesAccessor.hasAttribute("members")) {
-				throw new InvalidAttributeValueException(
-						"Requested to update a read only attribute");
-			}
 		} else {
 			logger.warn("Update of type {0} is not supported", configuration.getConnectorMessages()
 					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
