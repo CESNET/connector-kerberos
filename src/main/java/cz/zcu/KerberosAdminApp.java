@@ -64,7 +64,7 @@ public class KerberosAdminApp {
 		connector.init(config);
 		System.out.println(Long.toHexString(connector.getContextPointer()));
 
-		connector.executeQuery(null, "host/*", new MyResultsHandler(), null);
+		connector.executeQuery(null, "host/*", new PrintResultsHandler(), null);
 
 		connector.dispose();
 	}
