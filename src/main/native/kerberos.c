@@ -101,6 +101,7 @@ void krbconn_free_config(krbconn_config_t *config) {
 	free(config->principal);
 	free(config->password);
 	free(config->realm);
+	memset(config, 0, sizeof(*config));
 }
 
 
