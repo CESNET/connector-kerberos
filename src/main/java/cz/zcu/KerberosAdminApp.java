@@ -1,18 +1,71 @@
 package cz.zcu;
 
+import org.apache.commons.cli.*;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.*;
+
+
 /**
  * Created by majlen on 21.11.16.
  */
 public class KerberosAdminApp {
+	public static void usage(Options options) {
+		System.out.println("KerberosAdminApp [OPTIONS]");
+		System.out.println("OPTIONS are:");
+		System.out.println("  -h, --help ...... " + options.getOption("h").getDescription());
+		System.out.println("  -k, --keytab .... " + options.getOption("k").getDescription());
+		System.out.println("  -r, --realm ..... " + options.getOption("r").getDescription());
+		System.out.println("  -u, --user ...... " + options.getOption("u").getDescription());
+		System.out.println("  -p, --password .. " + options.getOption("p").getDescription());
+	}
+
 	public static void main(String[] args) {
 		KerberosConfiguration config = new KerberosConfiguration();
-		config.setRealm(args[0]);
-		config.setPrincipal(args[1]);
-		config.setKeytab(args[2]);
+		CommandLineParser parser = new DefaultParser();
+		Options options = new Options();
+
+		options.addOption("h", "help", false, "usage message");
+		options.addOption("k", "keytab", true, "admin keytab");
+		options.addOption("r", "realm", true, "kerberos realm");
+		options.addOption("u", "user", true, "admin principal");
+		options.addOption("p", "password", true, "admin password");
+
+		try {
+			CommandLine line = parser.parse(options, args);
+
+			if(line.hasOption("h")) {
+				usage(options);
+				return;
+			}
+			if(line.hasOption("k")) {
+				config.setKeytab(line.getOptionValue("k"));
+				System.out.println("Keytab: " + config.getKeytab());
+			}
+			if(line.hasOption("r")) {
+				config.setRealm(line.getOptionValue("r"));
+				System.out.println("Realm: " + config.getRealm());
+			}
+			if(line.hasOption("u")) {
+				config.setPrincipal(line.getOptionValue("u"));
+				System.out.println("Principal: " + config.getPrincipal());
+			}
+			if(line.hasOption("p")) {
+				config.setPassword(new GuardedString(line.getOptionValue("p").toCharArray()));
+				System.out.println("Password: (specified)");
+			}
+		}
+		catch(ParseException exp) {
+			System.out.println("Invalid arguments: " + exp.getMessage());
+			return;
+		}
 
 		KerberosConnector connector = new KerberosConnector();
 		connector.init(config);
 		System.out.println(Long.toHexString(connector.getContextPointer()));
+
+		connector.executeQuery(null, "host/*", new MyResultsHandler(), null);
+
 		connector.dispose();
 	}
 }
