@@ -1,4 +1,4 @@
-#include <kadm5/admin.h>
+#include <krb5.h>
 
 #ifndef KERBEROS_CONNECTOR_H
 #define KERBEROS_CONNECTOR_H
