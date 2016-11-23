@@ -144,7 +144,7 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 	if ((code = krbconn_princ2str(ctx->krb, krbresult.mod_name, &result->mod_name)) != 0) return code;
 	result->mod_date = krbresult.mod_date;
 	result->attributes = krbresult.attributes;
-	result->policy = strdup(krbresult.policy);
+	if (krbresult.policy) result->policy = strdup(krbresult.policy);
 
 	kadm5_free_principal_ent(ctx->handle, &krbresult);
 
