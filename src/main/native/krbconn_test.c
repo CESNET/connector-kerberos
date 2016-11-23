@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 		err = krbconn_error(&ctx, code);
 		printf("%s\n", err);
 		free(err);
-		return code;
+		goto end;
 	}
 
 	if (strcmp(command, "get") == 0) {
