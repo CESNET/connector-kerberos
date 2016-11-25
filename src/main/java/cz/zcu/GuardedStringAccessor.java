@@ -6,7 +6,6 @@ import java.util.Arrays;
 
 /**
  * Simple GuardedString accessor.
- * @author Milan Ševčík
  */
 public class GuardedStringAccessor implements GuardedString.Accessor {
 	private char[] myChars;

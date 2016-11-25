@@ -6,9 +6,6 @@ import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.*;
 
 
-/**
- * Created by majlen on 21.11.16.
- */
 public class KerberosAdminApp {
 	public static void usage(Options options) {
 		System.out.println("KerberosAdminApp [OPTIONS]");

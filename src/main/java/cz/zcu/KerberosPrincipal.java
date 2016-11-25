@@ -2,9 +2,6 @@ package cz.zcu;
 
 import org.identityconnectors.framework.common.objects.*;
 
-/**
- * Created by majlen on 22.11.16.
- */
 public class KerberosPrincipal {
 	private String name;
 	private long princExpiry;
