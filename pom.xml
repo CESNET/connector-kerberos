@@ -5,29 +5,27 @@
     <parent>
         <groupId>org.forgerock.openicf.connectors</groupId>
         <artifactId>connectors-parent</artifactId>
-        <!--version>1.4.1.0</version-->
         <version>1.5.0.0-SNAPSHOT</version>
     </parent>
     <groupId>cz.zcu</groupId>
     <artifactId>kerberos-connector</artifactId>
-    <version>1.4.1.0-SNAPSHOT</version>
+    <version>1.5.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+
     <name>Kerberos Connector</name>
     <description>Connector for Kerberos</description>
     <url>http://openicf.forgerock.org/connectors/kerberos-connector/</url>
+
     <issueManagement>
-        <system>jira</system>
-        <url>https://bugster.forgerock.org/jira/browse/OPENICF/component/10191</url>
+        <system></system>
+        <url></url>
     </issueManagement>
-    <ciManagement>
-        <system>jenkins</system>
-        <url>https://ci.forgerock.org/view/OpenICF/job/OpenICF - kerberos-connector - postcommit/</url>
-    </ciManagement>
     <scm>
-        <connection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</connection>
-        <developerConnection>scm:git:ssh://git@stash.forgerock.org:7999/openicf/kerberos-connector.git</developerConnection>
-        <url>http://stash.forgerock.org/projects/OPENICF/repos/kerberos-connector/browse</url>
+        <connection></connection>
+        <developerConnection></developerConnection>
+        <url></url>
     </scm>
+
     <properties>
         <maven.compiler.target>1.6</maven.compiler.target>
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -36,6 +34,7 @@
         <framework.compatibilityVersion>1.4</framework.compatibilityVersion>
         <framework.releaseVersion>1.0</framework.releaseVersion>
     </properties>
+
     <repositories>
         <repository>
             <id>forgerock-staging-repository</id>
@@ -54,6 +53,7 @@
             </releases>
         </repository>
     </repositories>
+
     <dependencies>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -71,7 +71,7 @@
             <artifactId>groovy-all</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.testng</groupId>
@@ -89,6 +89,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -96,7 +97,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
-            <plugin>
+	        <plugin>
                 <groupId>org.forgerock.maven.plugins</groupId>
                 <artifactId>openicf-maven-plugin</artifactId>
                 <executions>
@@ -107,7 +108,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
+	        <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
