@@ -335,7 +335,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 	}
 }
 
-JNIEXPORT jobjectArray JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query) {
+JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query,
+ 	                                                                      jint pageSize, jint pageOffset) {
 	krbconn_context_t* ctx = getContext(env, this);
 	char* cQuery = NULL;
 	if (query != NULL) {
@@ -348,18 +349,42 @@ JNIEXPORT jobjectArray JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv
 	int count;
 	krbconn_list(ctx, cQuery, &list, &count);
 
-	jclass arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
-	jobjectArray arr = (*env)->NewObjectArray(env, count, arrClass, NULL);
+	int trueCount = count;
+	if (count - pageOffset < pageSize) {
+		trueCount = count - pageOffset;
+	} else if (pageSize != 0) {
+		trueCount = pageSize;
+	}
 
-	for (int i = 0; i < count; i++) {
+	static jclass arrClass = NULL;
+	if (arrClass == NULL) {
+		arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
+	}
+
+	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
+
+	for (int i = pageOffset; i < pageOffset + trueCount; i++) {
 		krbconn_principal_t princ;
 		memset(&princ, 0, sizeof(princ));
 
 		krbconn_get(ctx, list[i], &princ);
-		add_princ_to_array(env, arr, i, princ, arrClass);
+		add_princ_to_array(env, arr, i - pageOffset, princ, arrClass);
 		krbconn_free_principal(&princ);
 	}
 
 	krbconn_free_list(ctx, list, count);
-	return arr;
+
+	static jclass results = NULL;
+	static jmethodID mid = NULL;
+	if (results == NULL) {
+		results = (*env)->FindClass(env, "Lcz/zcu/KerberosSearchResults;");
+	}
+	if (mid == NULL) {
+		mid = (*env)->GetMethodID(env, results, "<init>", "([Lcz/zcu/KerberosPrincipal;I)V");
+	}
+
+	jint remaining = count - pageOffset - trueCount;
+	jobject out = (*env)->NewObject(env, results, mid, arr, remaining);
+
+	return out;
 }

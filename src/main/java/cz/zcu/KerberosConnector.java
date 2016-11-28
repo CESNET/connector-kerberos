@@ -76,7 +76,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	private native void krb5_renew(Class gsAccessor);
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy);
 	private native void krb5_delete(String name);
-	private native KerberosPrincipal[] krb5_search(String query);
+	private native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************
 	 * SPI Operations
@@ -138,19 +138,27 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	/**
 	 * {@inheritDoc}
 	 */
-	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler,
-	                         OperationOptions options) {
-		KerberosPrincipal[] principals = krb5_search(query);
-		for (KerberosPrincipal principal: principals) {
-			if (!handler.handle(principal.toConnectorObject())) {
-				//Stop iterating because the handler stopped processing
-				break;
-			}
-		}
-
+	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
-			logger.info("Paged Search was requested");
-			((SearchResultsHandler) handler).handleResult(new SearchResult("0", 0));
+			logger.info("Paged search was requested...");
+
+			KerberosSearchResults results = krb5_search(query, options.getPageSize(), options.getPagedResultsOffset());
+			for (KerberosPrincipal principal : results.principals) {
+				if (!handler.handle(principal.toConnectorObject())) {
+					//Stop iterating because the handler stopped processing
+					((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", results.remaining));
+					break;
+				}
+			}
+		} else {
+			logger.info("Full search was requested...");
+			KerberosSearchResults results = krb5_search(query, 0, 0);
+			for (KerberosPrincipal principal : results.principals) {
+				if (!handler.handle(principal.toConnectorObject())) {
+					//Stop iterating because the handler stopped processing
+					break;
+				}
+			}
 		}
 	}
 

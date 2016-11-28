@@ -50,10 +50,10 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete
 /*
  * Class:     cz_zcu_KerberosConnector
  * Method:    krb5_search
- * Signature: (Ljava/lang/String;)[Lcz/zcu/KerberosPrincipal;
+ * Signature: (Ljava/lang/String;II)Lcz/zcu/KerberosSearchResults;
  */
-JNIEXPORT jobjectArray JNICALL Java_cz_zcu_KerberosConnector_krb5_1search
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search
+  (JNIEnv *, jobject, jstring, jint, jint);
 
 #ifdef __cplusplus
 }
