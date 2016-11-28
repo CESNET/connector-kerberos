@@ -140,7 +140,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
-			logger.info("Paged search was requested...");
+			logger.info("Paged search was requested...: " + options.getPagedResultsOffset());
 
 			KerberosSearchResults results = krb5_search(query, options.getPageSize(), options.getPagedResultsOffset());
 			for (KerberosPrincipal principal : results.principals) {
