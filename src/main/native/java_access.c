@@ -73,4 +73,6 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 	                                   modifyPrincipal, princ.mod_date, princ.attributes, policy);
 
 	(*env)->SetObjectArrayElement(env, array, pos, jPrinc);
+
+	(*env)->DeleteLocalRef(env, jPrinc);
 }

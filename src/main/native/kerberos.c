@@ -356,10 +356,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 		trueCount = pageSize;
 	}
 
-	static jclass arrClass = NULL;
-	if (arrClass == NULL) {
-		arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
-	}
+	jclass arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
 
 	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
 
@@ -374,17 +371,16 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	krbconn_free_list(ctx, list, count);
 
-	static jclass results = NULL;
+	jclass results = (*env)->FindClass(env, "Lcz/zcu/KerberosSearchResults;");
 	static jmethodID mid = NULL;
-	if (results == NULL) {
-		results = (*env)->FindClass(env, "Lcz/zcu/KerberosSearchResults;");
-	}
 	if (mid == NULL) {
 		mid = (*env)->GetMethodID(env, results, "<init>", "([Lcz/zcu/KerberosPrincipal;I)V");
 	}
 
 	jint remaining = count - pageOffset - trueCount;
 	jobject out = (*env)->NewObject(env, results, mid, arr, remaining);
+
+	(*env)->DeleteLocalRef(env, arr);
 
 	return out;
 }
