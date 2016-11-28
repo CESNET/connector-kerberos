@@ -5,6 +5,9 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class KerberosAdminApp {
 	public static void usage(Options options) {
@@ -61,7 +64,19 @@ public class KerberosAdminApp {
 		connector.init(config);
 		System.out.println(Long.toHexString(connector.getContextPointer()));
 
-		connector.executeQuery(null, "host/*", new PrintResultsHandler(), null);
+		Map<String, Object> opts = new HashMap<String, Object>();
+		opts.put(OperationOptions.OP_PAGE_SIZE, 20);
+		opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 81);
+
+		OperationOptions op = new OperationOptions(opts);
+
+		connector.executeQuery(null, null, new PrintResultsHandler(), op);
+
+		opts.remove(OperationOptions.OP_PAGED_RESULTS_OFFSET);
+		opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 101);
+		op = new OperationOptions(opts);
+
+		connector.executeQuery(null, null, new PrintResultsHandler(), op);
 
 		connector.dispose();
 	}
