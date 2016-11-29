@@ -17,7 +17,6 @@ public class KerberosAdminApp {
 		System.out.println("  -k, --keytab .... " + options.getOption("k").getDescription());
 		System.out.println("  -r, --realm ..... " + options.getOption("r").getDescription());
 		System.out.println("  -u, --user ...... " + options.getOption("u").getDescription());
-		//System.out.println("  -p, --password .. " + options.getOption("p").getDescription());
 	}
 
 	public static void main(String[] args) {
