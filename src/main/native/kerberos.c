@@ -214,9 +214,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
 	jobject config = (*env)->GetObjectField(env, this, fid);
 
-	cls = (*env)->GetObjectClass(env, config);
-
 	krbconn_fill_config(env, config, &conf, gs_accessor);
+	(*env)->DeleteLocalRef(env, config);
 
 	//Initialize context
 	long code;
@@ -229,9 +228,9 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 	}
 
 	//Store context
-	cls = (*env)->GetObjectClass(env, this);
 	fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
 	(*env)->SetLongField(env, this, fid, (jlong)ctx);
+	(*env)->DeleteLocalRef(env, cls);
 
 	krbconn_free_config(&conf);
 }
@@ -254,11 +253,12 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 	//Get configuration from KerberosConfiguration
 	cls = (*env)->GetObjectClass(env, this);
 	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
+
+	(*env)->DeleteLocalRef(env, cls);
 	jobject config = (*env)->GetObjectField(env, this, fid);
 
-	cls = (*env)->GetObjectClass(env, config);
-
 	krbconn_fill_config(env, config, &conf, gs_accessor);
+	(*env)->DeleteLocalRef(env, config);
 
 	long code;
 	if ((code = krbconn_renew(ctx, &conf)) != 0) {
@@ -285,6 +285,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 		temp = (*env)->GetStringUTFChars(env, name, 0);
 		str = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, name, temp);
+		(*env)->DeleteLocalRef(env, name);
 		princ->name = str;
 	}
 
@@ -296,6 +297,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 		temp = (*env)->GetStringUTFChars(env, policy, 0);
 		str = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, policy, temp);
+		(*env)->DeleteLocalRef(env, policy);
 		princ->policy = str;
 	}
 
@@ -303,6 +305,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 		temp = (*env)->GetStringUTFChars(env, pass, 0);
 		str = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, pass, temp);
+		(*env)->DeleteLocalRef(env, pass);
 	}
 
 	long err = krbconn_create(ctx, princ, str);
@@ -325,6 +328,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 		temp = (*env)->GetStringUTFChars(env, name, 0);
 		str = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, name, temp);
+		(*env)->DeleteLocalRef(env, name);
 	}
 
 	long err = krbconn_delete(ctx, str);
@@ -343,6 +347,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 		const char* temp = (*env)->GetStringUTFChars(env, query, 0);
 		cQuery = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, query, temp);
+		(*env)->DeleteLocalRef(env, query);
 	}
 
 	char** list;
@@ -356,9 +361,14 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 		trueCount = pageSize;
 	}
 
+	if (count < pageOffset) {
+		printf("Count of found principals %d is less then requested offset %d\n", count, pageOffset);
+		return NULL;
+	}
+
 	static jclass arrClass = NULL;
 	if (arrClass == NULL) {
-		arrClass = (*env)->FindClass(env, "Lcz/zcu/KerberosPrincipal;");
+		arrClass = (*env)->FindClass(env, "cz/zcu/KerberosPrincipal");
 		arrClass = (*env)->NewGlobalRef(env, arrClass);
 	}
 
@@ -378,7 +388,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	static jclass results = NULL;
 	static jmethodID mid = NULL;
 	if (results == NULL) {
-		results = (*env)->FindClass(env, "Lcz/zcu/KerberosSearchResults;");
+		results = (*env)->FindClass(env, "cz/zcu/KerberosSearchResults");
 		results = (*env)->NewGlobalRef(env, results);
 	}
 	if (mid == NULL) {

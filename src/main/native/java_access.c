@@ -6,6 +6,8 @@
 char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	jclass cls = (*env)->GetObjectClass(env, obj);
 	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Ljava/lang/String;");
+
+	(*env)->DeleteLocalRef(env, cls);
 	if (mid == NULL) {
 		return NULL;
 	}
@@ -17,15 +19,19 @@ char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);
 	char* out = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, str, temp);
+	(*env)->DeleteLocalRef(env, str);
 
 	return out;
 }
 
 char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass accessor) {
 	static jmethodID gsMid = NULL;
+	char* out;
 
 	jclass cls = (*env)->GetObjectClass(env, obj);
 	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Lorg/identityconnectors/common/security/GuardedString;");
+
+	(*env)->DeleteLocalRef(env, cls);
 	if (mid == 0) {
 		return NULL;
 	}
@@ -38,23 +44,31 @@ char* jguardedstring_getter(JNIEnv * env, jobject obj, const char* name, jclass 
 	}
 
 	jstring str = (*env)->CallStaticObjectMethod(env, accessor, gsMid, guarded);
+
+	(*env)->DeleteLocalRef(env, guarded);
+	(*env)->DeleteLocalRef(env, accessor);
 	if (str == NULL) {
-		// If password is empty, the method returns NULL
-		return NULL;
+		out = NULL;
+		goto out;
 	}
+
 	const char* temp = (*env)->GetStringUTFChars(env, str, 0);
-	char* out = strdup(temp);
+	out = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, str, temp);
 
+out:
+	(*env)->DeleteLocalRef(env, str);
 	return out;
 }
 
 krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 	static jfieldID fid = NULL;
-	jclass cls = (*env)->GetObjectClass(env, this);
 	if (fid == NULL) {
+		jclass cls = (*env)->GetObjectClass(env, this);
 		fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+		(*env)->DeleteLocalRef(env, cls);
 	}
+
 	krbconn_context_t* ctx = (krbconn_context_t*)(*env)->GetLongField(env, this, fid);
 	return ctx;
 }
@@ -71,6 +85,10 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 
 	jobject jPrinc = (*env)->NewObject(env, clazz, mid, name, princ.princ_expire, princ.pwd_expire, princ.pwd_change,
 	                                   modifyPrincipal, princ.mod_date, princ.attributes, policy);
+
+	(*env)->DeleteLocalRef(env, name);
+	(*env)->DeleteLocalRef(env, modifyPrincipal);
+	(*env)->DeleteLocalRef(env, policy);
 
 	(*env)->SetObjectArrayElement(env, array, pos, jPrinc);
 
