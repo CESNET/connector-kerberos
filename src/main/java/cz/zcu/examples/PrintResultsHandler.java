@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.examples;
 
 import org.identityconnectors.framework.common.objects.*;
 

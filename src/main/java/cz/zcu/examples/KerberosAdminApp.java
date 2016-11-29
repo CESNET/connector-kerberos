@@ -1,8 +1,10 @@
-package cz.zcu;
+package cz.zcu.examples;
 
+import cz.zcu.KerberosConfiguration;
+import cz.zcu.KerberosConnector;
 import org.apache.commons.cli.*;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,6 +12,8 @@ import java.util.Map;
 
 
 public class KerberosAdminApp {
+	static KerberosConnector connector = new KerberosConnector();
+
 	public static void usage(Options options) {
 		System.out.println("KerberosAdminApp [OPTIONS]");
 		System.out.println("OPTIONS are:");
@@ -60,7 +64,6 @@ public class KerberosAdminApp {
 			Arrays.fill(pass, '\0');
 		}
 
-		KerberosConnector connector = new KerberosConnector();
 		connector.init(config);
 		System.out.println(Long.toHexString(connector.getContextPointer()));
 
@@ -78,6 +81,21 @@ public class KerberosAdminApp {
 
 		connector.executeQuery(null, null, new PrintResultsHandler(), op);
 
+		Thread[] thrs = new Thread[10];
+		for (int i = 0; i < thrs.length; i++) {
+			thrs[i] = new Thread(new ExampleThread());
+			thrs[i].start();
+		}
+
+		for (int i = 0; i < thrs.length; i++) {
+			try {
+				thrs[i].join();
+			} catch (InterruptedException e) {
+				System.out.println(e.getMessage());
+			}
+		}
+
 		connector.dispose();
 	}
+
 }
