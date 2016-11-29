@@ -13,6 +13,7 @@ import java.util.Map;
 
 public class KerberosAdminApp {
 	static KerberosConnector connector = new KerberosConnector();
+	static KerberosConfiguration config = new KerberosConfiguration();
 
 	public static void usage(Options options) {
 		System.out.println("KerberosAdminApp [OPTIONS]");
@@ -24,7 +25,7 @@ public class KerberosAdminApp {
 	}
 
 	public static void main(String[] args) {
-		KerberosConfiguration config = new KerberosConfiguration();
+		config = new KerberosConfiguration();
 		CommandLineParser parser = new DefaultParser();
 		Options options = new Options();
 
