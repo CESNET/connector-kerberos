@@ -76,7 +76,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	private native void krb5_renew(Class gsAccessor);
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy);
 	private native void krb5_delete(String name);
-	private native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
+	private synchronized native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************
 	 * SPI Operations

@@ -353,6 +353,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	char** list;
 	int count;
 	krbconn_list(ctx, cQuery, &list, &count);
+	free(cQuery);
 
 	int trueCount = count;
 	if (count - pageOffset < pageSize) {
