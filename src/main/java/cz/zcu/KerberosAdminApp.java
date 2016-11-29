@@ -2,9 +2,9 @@ package cz.zcu;
 
 import org.apache.commons.cli.*;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +17,7 @@ public class KerberosAdminApp {
 		System.out.println("  -k, --keytab .... " + options.getOption("k").getDescription());
 		System.out.println("  -r, --realm ..... " + options.getOption("r").getDescription());
 		System.out.println("  -u, --user ...... " + options.getOption("u").getDescription());
-		System.out.println("  -p, --password .. " + options.getOption("p").getDescription());
+		//System.out.println("  -p, --password .. " + options.getOption("p").getDescription());
 	}
 
 	public static void main(String[] args) {
@@ -29,7 +29,6 @@ public class KerberosAdminApp {
 		options.addOption("k", "keytab", true, "admin keytab");
 		options.addOption("r", "realm", true, "kerberos realm");
 		options.addOption("u", "user", true, "admin principal");
-		options.addOption("p", "password", true, "admin password");
 
 		try {
 			CommandLine line = parser.parse(options, args);
@@ -50,14 +49,16 @@ public class KerberosAdminApp {
 				config.setPrincipal(line.getOptionValue("u"));
 				System.out.println("Principal: " + config.getPrincipal());
 			}
-			if(line.hasOption("p")) {
-				config.setPassword(new GuardedString(line.getOptionValue("p").toCharArray()));
-				System.out.println("Password: (specified)");
-			}
 		}
 		catch(ParseException exp) {
 			System.out.println("Invalid arguments: " + exp.getMessage());
 			return;
+		}
+
+		if (config.getKeytab() == null || config.getKeytab().equals("")) {
+			char[] pass = System.console().readPassword("Enter password: ");
+			config.setPassword(new GuardedString(pass));
+			Arrays.fill(pass, '\0');
 		}
 
 		KerberosConnector connector = new KerberosConnector();
