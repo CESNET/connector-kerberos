@@ -99,19 +99,7 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>make</id>
-						<phase>package</phase>
-						<configuration>
-							<executable>make</executable>
-							<arguments>package_source</arguments>
-							<workingDirectory>${project.build.directory}</workingDirectory>
-						</configuration>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>make</id>
+						<id>make package</id>
 						<phase>package</phase>
 						<configuration>
 							<executable>make</executable>
