@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 project(kerberos-connector)
 add_library(kerberos-connector SHARED java_access.c kerberos.c)
+add_library(kadm5_fake SHARED kadm5_fake.c)
 add_executable(krbconn_test krbconn_test.c)
 
 set_property(GLOBAL PROPERTY C_STANDARD 99)
@@ -21,6 +22,7 @@ endif()
 
 link_directories(${kerberos-connector_BINARY_DIR})
 target_include_directories(kerberos-connector PRIVATE ${KRB5_INCLUDE_DIRS} ${JNI_INCLUDE_DIRS})
+target_include_directories(kadm5_fake PRIVATE ${KRB5_INCLUDE_DIRS})
 target_link_libraries(kerberos-connector ${KRB5_LIBRARIES} ${JAVA_JVM_LIBRARY})
 target_link_libraries(krbconn_test kerberos-connector)
 
