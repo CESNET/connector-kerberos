@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 project(kerberos-connector)
 add_library(kerberos-connector SHARED java_access.c kerberos.c)
-add_executable(krbconn_test krbconn_test.c)
-
 set_property(GLOBAL PROPERTY C_STANDARD 99)
 add_definitions(-D_GNU_SOURCE)
 
@@ -22,9 +20,17 @@ endif()
 link_directories(${kerberos-connector_BINARY_DIR})
 target_include_directories(kerberos-connector PRIVATE ${KRB5_INCLUDE_DIRS} ${JNI_INCLUDE_DIRS})
 target_link_libraries(kerberos-connector ${KRB5_LIBRARIES} ${JAVA_JVM_LIBRARY})
-target_link_libraries(krbconn_test kerberos-connector)
 
-install(TARGETS kerberos-connector krbconn_test
+set(TARGETS kerberos-connector)
+
+set(TEST 0 CACHE BOOL "Create test tools")
+if(${TEST})
+	add_executable(krbconn_test krbconn_test.c)
+	target_link_libraries(krbconn_test kerberos-connector)
+	list(APPEND TARGETS krbconn_test)
+endif()
+
+install(TARGETS ${TARGETS}
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib)
 
