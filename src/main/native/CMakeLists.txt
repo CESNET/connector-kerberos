@@ -11,7 +11,7 @@ find_package(JNI)
 if(NOT JNI_FOUND)
 	message(FATAL_ERROR "JNI not found")
 endif()
-find_package(KRB5 REQUIRED kadm-client)
+find_package(KRB5 REQUIRED krb5 kadm-client)
 if(NOT KRB5_FOUND)
 	message(FATAL_ERROR "Kerberos 5 not found")
 endif()
@@ -21,7 +21,7 @@ endif()
 
 link_directories(${kerberos-connector_BINARY_DIR})
 target_include_directories(kerberos-connector PRIVATE ${KRB5_INCLUDE_DIRS} ${JNI_INCLUDE_DIRS})
-target_link_libraries(kerberos-connector ${KRB5_LIBRARIES} ${JNI_LIBRARIES})
+target_link_libraries(kerberos-connector ${KRB5_LIBRARIES} ${JAVA_JVM_LIBRARY})
 target_link_libraries(krbconn_test kerberos-connector)
 
 install(TARGETS kerberos-connector krbconn_test
