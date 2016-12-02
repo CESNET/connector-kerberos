@@ -115,7 +115,10 @@
 						<phase>test</phase>
 						<configuration>
 							<executable>cmake</executable>
-							<arguments>-DTEST=On ${basedir}/jni</arguments>
+							<arguments>
+								<argument>-DTEST=On</argument>
+								<argument>${basedir}/jni</argument>
+							</arguments>
 							<workingDirectory>${project.build.directory}</workingDirectory>
 						</configuration>
 						<goals>
