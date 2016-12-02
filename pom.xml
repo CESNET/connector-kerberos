@@ -110,6 +110,29 @@
 							<goal>exec</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>cmake-test</id>
+						<phase>test</phase>
+						<configuration>
+							<executable>cmake</executable>
+							<arguments>-DTEST=On ${basedir}/jni</arguments>
+							<workingDirectory>${project.build.directory}</workingDirectory>
+						</configuration>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>make-test</id>
+						<phase>test</phase>
+						<configuration>
+							<executable>make</executable>
+							<workingDirectory>${project.build.directory}</workingDirectory>
+						</configuration>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
