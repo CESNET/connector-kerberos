@@ -26,8 +26,10 @@ set(TARGETS kerberos-connector)
 set(TEST 0 CACHE BOOL "Create test tools")
 if(${TEST})
 	add_executable(krbconn_test krbconn_test.c)
+	add_library(kadm5_fake SHARED kadm5_fake.c)
+	target_include_directories(kadm5_fake PRIVATE ${KRB5_INCLUDE_DIRS})
 	target_link_libraries(krbconn_test kerberos-connector)
-	list(APPEND TARGETS krbconn_test)
+	list(APPEND TARGETS krbconn_test kadm5_fake)
 endif()
 
 install(TARGETS ${TARGETS}
