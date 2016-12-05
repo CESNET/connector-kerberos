@@ -2,6 +2,7 @@ package cz.zcu;
 
 import java.util.*;
 
+import cz.zcu.exceptions.KerberosException;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
@@ -71,11 +72,11 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		configuration = null;
 	}
 
-	private native void krb5_init(Class gsAccessor);
+	private native void krb5_init(Class gsAccessor) throws KerberosException;
 	private native void krb5_destroy();
-	private native void krb5_renew(Class gsAccessor);
-	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy);
-	private native void krb5_delete(String name);
+	private native void krb5_renew(Class gsAccessor) throws KerberosException;
+	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy) throws KerberosException;
+	private native void krb5_delete(String name) throws KerberosException;
 	private synchronized native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************

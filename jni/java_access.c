@@ -94,3 +94,13 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 
 	(*env)->DeleteLocalRef(env, jPrinc);
 }
+
+jint throwKerberosException(JNIEnv* env, const char* message) {
+	static jclass kerbEx = NULL;
+	if (kerbEx == NULL) {
+		kerbEx = (*env)->FindClass(env, "cz/zcu/exceptions/KerberosException");
+		kerbEx = (*env)->NewGlobalRef(env, kerbEx);
+	}
+
+	return (*env)->ThrowNew(env, kerbEx, message);
+}
