@@ -126,15 +126,15 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			if (name != null && password != null) {
 				krb5_create(name.getNameValue(), GuardedStringAccessor.getString(password), principalExpiry, passwordExpiry,
 						attributes, policy);
+				logger.info("Creating Kerberos principal {0}", name.getNameValue());
 				return new Uid(AttributeUtil.getStringValue(name).toLowerCase());
 			} else {
 				throw new InvalidAttributeValueException("Name and password attributes are required");
 			}
 		} else {
-			logger.warn("Create of type {0} is not supported", configuration.getConnectorMessages()
-					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-			throw new UnsupportedOperationException("Create of type"
-					+ objectClass.getObjectClassValue() + " is not supported");
+			logger.warn("Create of type {0} is not supported",
+					configuration.getConnectorMessages().format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Create of type" + objectClass.getObjectClassValue() + " is not supported");
 		}
 	}
 
@@ -144,11 +144,11 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
 			krb5_delete(uid.getUidValue());
+			logger.info("Deleting Kerberos principal {0}", uid.getUidValue());
 		} else {
-			logger.warn("Delete of type {0} is not supported", configuration.getConnectorMessages()
-					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-			throw new UnsupportedOperationException("Delete of type"
-					+ objectClass.getObjectClassValue() + " is not supported");
+			logger.warn("Delete of type {0} is not supported",
+					configuration.getConnectorMessages().format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Delete of type" + objectClass.getObjectClassValue() + " is not supported");
 		}
 	}
 
@@ -163,8 +163,9 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * {@inheritDoc}
 	 */
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
+		logger.info("Executing query: {0}", query);
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
-			logger.info("Paged search was requested...: " + options.getPagedResultsOffset());
+			logger.info("Paged search was requested. Offset: {0}. Count: {1}.", options.getPagedResultsOffset(), options.getPageSize());
 
 			KerberosSearchResults results;
 			if (options.getPagedResultsOffset() == null) {
@@ -181,7 +182,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			}
 			((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", results.remaining));
 		} else {
-			logger.info("Full search was requested...");
+			logger.info("Full search was requested.");
 			KerberosSearchResults results = krb5_search(query, 0, 0);
 			for (KerberosPrincipal principal : results.principals) {
 				if (!handler.handle(principal.toConnectorObject())) {
@@ -242,10 +243,9 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 				logger.info("Renaming Kerberos principal {0} to {1}", uid.getUidValue(), returnUid.getUidValue());
 			}
 		} else {
-			logger.warn("Update of type {0} is not supported", configuration.getConnectorMessages()
-					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
-			throw new UnsupportedOperationException("Update of type"
-					+ objectClass.getObjectClassValue() + " is not supported");
+			logger.warn("Update of type {0} is not supported",
+					configuration.getConnectorMessages().format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
+			throw new UnsupportedOperationException("Update of type" + objectClass.getObjectClassValue() + " is not supported");
 		}
 		return returnUid;
 	}
@@ -258,7 +258,6 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		}
 		return schema;
 	}
-
 
 	private Schema buildSchema() {
 		final SchemaBuilder schemaBuilder = new SchemaBuilder(KerberosConnector.class);
