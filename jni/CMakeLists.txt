@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-project(kerberos-connector)
+project(kerberos-connector C)
 add_library(kerberos-connector SHARED java_access.c kerberos.c)
 set_property(GLOBAL PROPERTY C_STANDARD 99)
 add_definitions(-D_GNU_SOURCE)
