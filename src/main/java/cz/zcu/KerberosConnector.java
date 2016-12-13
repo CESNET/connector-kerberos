@@ -152,10 +152,10 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			for (KerberosPrincipal principal : results.principals) {
 				if (!handler.handle(principal.toConnectorObject())) {
 					//Stop iterating because the handler stopped processing
-					((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", results.remaining));
 					break;
 				}
 			}
+			((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", results.remaining));
 		} else {
 			logger.info("Full search was requested...");
 			KerberosSearchResults results = krb5_search(query, 0, 0);
