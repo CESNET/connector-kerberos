@@ -77,6 +77,9 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	private native void krb5_renew(Class gsAccessor) throws KerberosException;
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy) throws KerberosException;
 	private native void krb5_delete(String name) throws KerberosException;
+	private native void krb5_rename(String name, String newName) throws KerberosException;
+	private native void krb5_chpasswd(String name, String password);
+	private native void krb5_modify(String name, long principalExpiry, long passwordExpiry, int attributes, String policy, int mask) throws KerberosException;
 	private synchronized native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************
@@ -193,24 +196,58 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * {@inheritDoc}
 	 */
 	public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
-		AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
-		Name newName = attributesAccessor.getName();
-		Uid uidAfterUpdate = uid;
-		if (newName != null) {
-			logger.info("Rename the object {0}:{1} to {2}", objectClass.getObjectClassValue(), uid
-					.getUidValue(), newName.getNameValue());
-			uidAfterUpdate = new Uid(newName.getNameValue().toLowerCase(Locale.US));
-		}
-
+		Uid returnUid = uid;
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+			AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
 
+			long principalExpiry = 0;
+			long passwordExpiry = 0;
+			int attributes = 0;
+			String policy = null;
+			int mask = 0;
+
+			if (attributesAccessor.hasAttribute(OperationalAttributes.DISABLE_DATE_NAME)) {
+				principalExpiry = attributesAccessor.findLong(OperationalAttributes.DISABLE_DATE_NAME);
+				mask += 1;
+			}
+
+			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
+				passwordExpiry = attributesAccessor.findLong(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME);
+				mask += 2;
+			}
+
+			if (attributesAccessor.hasAttribute("attributes")) {
+				attributes = attributesAccessor.findInteger("attributes");
+				mask += 4;
+			}
+
+			if (attributesAccessor.hasAttribute("policy")) {
+				policy = attributesAccessor.findString("policy");
+				mask += 8;
+			}
+
+			if (mask != 0) {
+				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes, policy, mask);
+				logger.info("Modifying Kerberos principal {0}: mask {1}", uid.getUidValue(), mask);
+			}
+
+			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_NAME)) {
+				krb5_chpasswd(uid.getUidValue(), GuardedStringAccessor.getString(attributesAccessor.getPassword()));
+				logger.info("Changing password of Kerberos principal {0}", uid.getUidValue());
+			}
+
+			if (attributesAccessor.hasAttribute(Name.NAME)) {
+				krb5_rename(uid.getUidValue(), attributesAccessor.getName().getNameValue());
+				returnUid = new Uid(attributesAccessor.getName().getNameValue());
+				logger.info("Renaming Kerberos principal {0} to {1}", uid.getUidValue(), returnUid.getUidValue());
+			}
 		} else {
 			logger.warn("Update of type {0} is not supported", configuration.getConnectorMessages()
 					.format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
 			throw new UnsupportedOperationException("Update of type"
 					+ objectClass.getObjectClassValue() + " is not supported");
 		}
-		return uidAfterUpdate;
+		return returnUid;
 	}
 
 

@@ -55,6 +55,30 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete
 JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search
   (JNIEnv *, jobject, jstring, jint, jint);
 
+/*
+ * Class:     cz_zcu_KerberosConnector
+ * Method:    krb5_rename
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     cz_zcu_KerberosConnector
+ * Method:    krb5_chpasswd
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     cz_zcu_KerberosConnector
+ * Method:    krb5_modify
+ * Signature: (Ljava/lang/String;JJILjava/lang/String;I)V
+ */
+JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify
+  (JNIEnv *, jobject, jstring, jlong, jlong, jint, jstring, jint);
+
 #ifdef __cplusplus
 }
 #endif

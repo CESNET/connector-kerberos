@@ -407,3 +407,17 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	return out;
 }
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, jobject this, jstring name, jstring newName) {
+	//TODO
+}
+
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env, jobject this, jstring name, jstring password) {
+	//TODO
+}
+
+JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, jobject this, jstring name,
+                                                                     jlong princ_expiry, jlong password_expiry,
+                                                                     jint attributes, jstring policy, jint mask) {
+	//TODO
+}
