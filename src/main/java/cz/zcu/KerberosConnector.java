@@ -89,15 +89,36 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	/**
 	 * {@inheritDoc}
 	 */
-	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
-	                  final OperationOptions options) {
+	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+			Attribute tempAttr;
+
 			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
 			GuardedString password = AttributeUtil.getPasswordValue(createAttributes);
-			long principalExpiry = AttributeUtil.getLongValue(AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes));
-			long passwordExpiry = AttributeUtil.getLongValue(AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes));
-			int attributes = AttributeUtil.getIntegerValue(AttributeUtil.find("attributes", createAttributes));
-			String policy = AttributeUtil.getStringValue(AttributeUtil.find("policy", createAttributes));
+
+			tempAttr = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes);
+			long principalExpiry = 0;
+			if (tempAttr != null) {
+				principalExpiry = AttributeUtil.getLongValue(tempAttr);
+			}
+
+			tempAttr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes);
+			long passwordExpiry = 0;
+			if (tempAttr != null) {
+				passwordExpiry = AttributeUtil.getLongValue(tempAttr);
+			}
+
+			tempAttr = AttributeUtil.find("attributes", createAttributes);
+			int attributes = 0;
+			if (tempAttr != null) {
+				attributes = AttributeUtil.getIntegerValue(tempAttr);
+			}
+
+			tempAttr = AttributeUtil.find("policy", createAttributes);
+			String policy = null;
+			if (tempAttr != null) {
+				AttributeUtil.getStringValue(tempAttr);
+			}
 
 			if (name != null && password != null) {
 				krb5_create(name.getNameValue(), GuardedStringAccessor.getString(password), principalExpiry, passwordExpiry,
@@ -131,8 +152,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	/**
 	 * {@inheritDoc}
 	 */
-	public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass,
-	                                                       OperationOptions options) {
+	public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
 		return new KerberosFilterTranslator();
 	}
 
@@ -149,6 +169,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			} else {
 				results = krb5_search(query, options.getPageSize(), options.getPagedResultsOffset());
 			}
+
 			for (KerberosPrincipal principal : results.principals) {
 				if (!handler.handle(principal.toConnectorObject())) {
 					//Stop iterating because the handler stopped processing
@@ -171,8 +192,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	/**
 	 * {@inheritDoc}
 	 */
-	public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
-	                  OperationOptions options) {
+	public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
 		AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
 		Name newName = attributesAccessor.getName();
 		Uid uidAfterUpdate = uid;
