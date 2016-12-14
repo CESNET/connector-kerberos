@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 		memset(&principal, 0, sizeof principal);
 		principal.name = "host/pokuston.civ.zcu.cz@ZCU.CZ";
 		principal.policy = "default_nohistory";
-		if ((code = krbconn_create(&ctx, &principal, NULL))) {
+		if ((code = krbconn_create(&ctx, &principal, KRBCONN_POLICY, NULL))) {
 			err = krbconn_error(&ctx, code);
 			printf("%s\n", err);
 			free(err);

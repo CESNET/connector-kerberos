@@ -370,7 +370,7 @@ kadm5_ret_t kadm5_delete_principal(
 }
 
 
-/* just checks, if principal exists */
+/* just checks the principal existence */
 kadm5_ret_t kadm5_modify_principal(
 	void *server_handle,
 	kadm5_principal_ent_t ent,
@@ -389,7 +389,7 @@ kadm5_ret_t kadm5_modify_principal(
 }
 
 
-/* just checks, if principals existence */
+/* just checks the principals existence */
 kadm5_ret_t kadm5_rename_principal(
 	void *server_handle,
 	krb5_principal old,
@@ -449,6 +449,25 @@ kadm5_ret_t kadm5_free_name_list(
 
 	for (i = 0; i < count; i++) free(names[i]);
 	free(names);
+
+	return 0;
+}
+
+
+/* just checks the principals existence */
+kadm5_ret_t kadm5_chpass_principal(
+	void *server_handle,
+	krb5_principal principal,
+	char *pass)
+{
+	int i;
+	_kadm5_handle *handle = server_handle;
+	_krb5_context *ctx = handle->ctx;
+
+	if (check_principal(principal) != 0) return ERROR_BAD_DATA;
+
+	i = fake_search(ctx, principal);
+	if (i == -1) return ERROR_UNKNOWN_PRINCIPAL;
 
 	return 0;
 }

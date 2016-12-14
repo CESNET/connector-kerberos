@@ -109,6 +109,49 @@ static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal princi
 }
 
 
+/*
+ * fill KADM5 principal record according to the specified masks
+ */
+static long krbconn_fill_princrec(krb5_context krb, kadm5_principal_ent_rec *krbrec, long *mask_out, krbconn_principal_t *info, int mask_in) {
+	long code;
+	krb5_principal krbprinc;
+	long mask = *mask_out;
+
+	if ((code = krb5_parse_name(krb, info->name, &krbprinc)) != 0) return code;
+
+	memset(krbrec, 0, sizeof(*krbrec));
+	krbrec->principal = krbprinc;
+	mask |= KADM5_PRINCIPAL;
+	if ((mask_in & KRBCONN_PRINC_EXPIRE_TIME) != 0) {
+		mask |= KADM5_PRINC_EXPIRE_TIME;
+		krbrec->princ_expire_time = info->princ_expire;
+	}
+	if ((mask_in & KRBCONN_PW_EXPIRATION) != 0) {
+		mask |= KADM5_PW_EXPIRATION;
+		krbrec->pw_expiration = info->pwd_expire;
+	}
+	/* TODO: check NULL attributes */
+	if ((mask_in & KRBCONN_ATTRIBUTES) != 0) {
+		mask |= KADM5_ATTRIBUTES;
+		krbrec->attributes = info->attributes;
+	}
+	/* TODO: check clearing the policy */
+	if ((mask_in & KRBCONN_POLICY) != 0) {
+		mask |= KADM5_POLICY;
+		krbrec->policy = info->policy;
+	}
+
+	*mask_out = mask;
+	return 0;
+}
+
+
+static void krbconn_free_princrec(krb5_context krb, kadm5_principal_ent_rec *krbrec) {
+	krb5_free_principal(krb, krbrec->principal);
+	memset(krbrec, 0, sizeof(*krbrec));
+}
+
+
 long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result) {
 	long code;
 	krb5_principal principal;
@@ -137,35 +180,14 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 }
 
 
-long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, char *pass) {
-	kadm5_principal_ent_rec krbprinc;
-	krb5_principal krbname;
-	long mask = 0;
+long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, int mask, char *pass) {
+	kadm5_principal_ent_rec krbrec;
+	long krbmask = 0;
 	long code;
 
-	if ((code = krb5_parse_name(ctx->krb, info->name, &krbname)) != 0) return code;
-
-	memset(&krbprinc, 0, sizeof krbprinc);
-	krbprinc.principal = krbname;
-	mask |= KADM5_PRINCIPAL;
-	if (info->princ_expire) {
-		mask |= KADM5_PRINC_EXPIRE_TIME;
-		krbprinc.princ_expire_time = info->princ_expire;
-	}
-	if (info->pwd_expire) {
-		mask |= KADM5_PW_EXPIRATION;
-		krbprinc.pw_expiration = info->pwd_expire;
-	}
-	if (info->attributes) {
-		mask |= KADM5_ATTRIBUTES;
-		krbprinc.attributes = info->attributes;
-	}
-	if (info->policy) {
-		mask |= KADM5_POLICY;
-		krbprinc.policy = info->policy;
-	}
-	code = kadm5_create_principal(ctx->handle, &krbprinc, mask, pass);
-	krb5_free_principal(ctx->krb, krbname);
+	if ((code = krbconn_fill_princrec(ctx->krb, &krbrec, &krbmask, info, mask)) != 0) return code;
+	code = kadm5_create_principal(ctx->handle, &krbrec, krbmask, pass);
+	krbconn_free_princrec(ctx->krb, &krbrec);
 	return code;
 }
 
@@ -190,6 +212,49 @@ long krbconn_list(krbconn_context_t *ctx, char *search, char ***list, int *count
 
 void krbconn_free_list(krbconn_context_t *ctx, char **list, int count) {
 	kadm5_free_name_list(ctx->handle, list, count);
+}
+
+
+long krbconn_modify(krbconn_context_t *ctx, krbconn_principal_t *info, int mask) {
+	kadm5_principal_ent_rec krbrec;
+	long krbmask = 0;
+	long code;
+
+	if ((code = krbconn_fill_princrec(ctx->krb, &krbrec, &krbmask, info, mask)) != 0) return code;
+	code = kadm5_modify_principal(ctx->handle, &krbrec, krbmask);
+	krbconn_free_princrec(ctx->krb, &krbrec);
+	return code;
+}
+
+
+long krbconn_rename(krbconn_context_t *ctx, const char *oldname, const char *newname) {
+	krb5_principal oldprinc, newprinc;
+	long code = 0;
+
+	if ((code = krb5_parse_name(ctx->krb, oldname, &oldprinc)) != 0) return code;
+	if ((code = krb5_parse_name(ctx->krb, newname, &newprinc)) != 0) {
+		krb5_free_principal(ctx->krb, oldprinc);
+		return code;
+	}
+
+	code = kadm5_rename_principal(ctx->handle, oldprinc, newprinc);
+
+	krb5_free_principal(ctx->krb, oldprinc);
+	krb5_free_principal(ctx->krb, newprinc);
+
+	return code;
+}
+
+
+long krbconn_chpass(krbconn_context_t *ctx, const char *princ_name, char *password) {
+	long code;
+	krb5_principal krbprinc;
+
+	if ((code = krb5_parse_name(ctx->krb, princ_name, &krbprinc)) != 0) return code;
+	code = kadm5_chpass_principal(ctx->krb, krbprinc, password);
+	krb5_free_principal(ctx->krb, krbprinc);
+
+	return code;
 }
 
 
@@ -275,6 +340,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
                                                                   jint attrs, jstring policy) {
 	krbconn_context_t* ctx = getContext(env, this);
 	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
+	/* FIXME: dynamicaly according to available attributes */
+	int mask = KRBCONN_PRINC_EXPIRE_TIME | KRBCONN_PW_EXPIRATION | KRBCONN_ATTRIBUTES | KRBCONN_POLICY;
 
 	const char* temp;
 	char* str;
@@ -306,7 +373,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 		(*env)->DeleteLocalRef(env, pass);
 	}
 
-	long err = krbconn_create(ctx, princ, str);
+	long err = krbconn_create(ctx, princ, mask, str);
 	free(princ->name);
 	free(princ->policy);
 	free(str);
