@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
 	krbconn_principal_t principal;
 	char c;
 	const char *command = "get";
+	char *arg = "host/pokuston.civ.zcu.cz";
 
 	memset(&config, 0, sizeof config);
 	while ((c = getopt(argc, argv, "hu:p:k:r:")) != -1) {
@@ -47,7 +48,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (optind < argc) {
-		command = argv[optind];
+		command = argv[optind++];
+	}
+	if (optind < argc) {
+		arg = argv[optind++];
 	}
 	if (!config.principal) {
 		usage(argv[0]);
@@ -72,9 +76,9 @@ int main(int argc, char **argv) {
 	}
 
 	if (strcmp(command, "get") == 0) {
-		if ((code = krbconn_get(&ctx, "majlen", &principal))) {
+		if ((code = krbconn_get(&ctx, arg, &principal)) != 0) {
 			err = krbconn_error(&ctx, code);
-			printf("%s\n", err);
+			printf("%s, principal '%s'\n", err, arg);
 			free(err);
 			goto end;
 		}
@@ -89,7 +93,7 @@ int main(int argc, char **argv) {
 		krbconn_free_principal(&principal);
 	} else if (strcmp(command, "create") == 0) {
 		memset(&principal, 0, sizeof principal);
-		principal.name = "host/pokuston.civ.zcu.cz@ZCU.CZ";
+		principal.name = arg;
 		principal.policy = "default_nohistory";
 		if ((code = krbconn_create(&ctx, &principal, KRBCONN_POLICY, NULL))) {
 			err = krbconn_error(&ctx, code);
@@ -99,10 +103,10 @@ int main(int argc, char **argv) {
 		}
 		printf("%s created\n", principal.name);
 	} else if (strcmp(command, "delete") == 0) {
-		principal.name = "host/pokuston.civ.zcu.cz@ZCU.CZ";
+		principal.name = arg;
 		if ((code = krbconn_delete(&ctx, principal.name))) {
 			err = krbconn_error(&ctx, code);
-			printf("%s\n", err);
+			printf("%s, principal '%s'\n", err, arg);
 			free(err);
 			goto end;
 		}
@@ -122,6 +126,27 @@ int main(int argc, char **argv) {
 		}
 		printf("\n");
 		krbconn_free_list(&ctx, list, count);
+	} else if (strcmp(command, "modify") == 0) {
+		int mask = 0;
+
+		memset(&principal, 0, sizeof principal);
+		principal.name = arg;
+		if (optind < argc) {
+			principal.policy = argv[optind++];
+			if (strcmp(principal.policy, "NULL") == 0) principal.policy = NULL;
+		} else {
+			principal.policy = "default_nohistory";
+		}
+		printf("Principal:       %s\n", principal.name);
+		printf("Attributes:      %d\n", principal.attributes);
+		printf("Policy:          %s\n", principal.policy);
+		if ((code = krbconn_modify(&ctx, &principal, KRBCONN_POLICY))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("%s modified\n", principal.name);
 	}
 
 end:
