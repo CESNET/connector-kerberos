@@ -75,7 +75,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	private native void krb5_init(Class gsAccessor) throws KerberosException;
 	private native void krb5_destroy();
 	private native void krb5_renew(Class gsAccessor) throws KerberosException;
-	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy) throws KerberosException;
+	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy, int mask) throws KerberosException;
 	private native void krb5_delete(String name) throws KerberosException;
 	private native void krb5_rename(String name, String newName) throws KerberosException;
 	private native void krb5_chpasswd(String name, String password);
@@ -99,28 +99,35 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
 			GuardedString password = AttributeUtil.getPasswordValue(createAttributes);
 
+			//In case of creating a principal, it's necessary to set its name
+			int mask = KerberosPrincipal.KRBCONN_PRINCIPAL;
+
 			tempAttr = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes);
 			long principalExpiry = 0;
 			if (tempAttr != null) {
 				principalExpiry = AttributeUtil.getLongValue(tempAttr);
+				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
 			}
 
 			tempAttr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes);
 			long passwordExpiry = 0;
 			if (tempAttr != null) {
 				passwordExpiry = AttributeUtil.getLongValue(tempAttr);
+				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
 			}
 
 			tempAttr = AttributeUtil.find("attributes", createAttributes);
 			int attributes = 0;
 			if (tempAttr != null) {
 				attributes = AttributeUtil.getIntegerValue(tempAttr);
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 
 			tempAttr = AttributeUtil.find("policy", createAttributes);
 			String policy = null;
 			if (tempAttr != null) {
-				AttributeUtil.getStringValue(tempAttr);
+				policy = AttributeUtil.getStringValue(tempAttr);
+				mask |= KerberosPrincipal.KRBCONN_POLICY;
 			}
 
 			if (name != null) {
@@ -129,8 +136,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 					guardedPassword = GuardedStringAccessor.getString(password);
 				}
 				logger.info("Creating Kerberos principal {0}", name.getNameValue());
-				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry,
-						attributes, policy);
+				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry, attributes, policy, mask);
 				return new Uid(AttributeUtil.getStringValue(name).toLowerCase());
 			} else {
 				throw new InvalidAttributeValueException("Name attribute is required");
@@ -213,22 +219,22 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.DISABLE_DATE_NAME)) {
 				principalExpiry = attributesAccessor.findLong(OperationalAttributes.DISABLE_DATE_NAME);
-				mask += 1;
+				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
 				passwordExpiry = attributesAccessor.findLong(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME);
-				mask += 2;
+				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
 			}
 
 			if (attributesAccessor.hasAttribute("attributes")) {
 				attributes = attributesAccessor.findInteger("attributes");
-				mask += 4;
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 
 			if (attributesAccessor.hasAttribute("policy")) {
 				policy = attributesAccessor.findString("policy");
-				mask += 8;
+				mask |= KerberosPrincipal.KRBCONN_POLICY;
 			}
 
 			if (mask != 0) {

@@ -338,11 +338,9 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, jobject this, jstring name, jstring pass,
                                                                   jlong princ_expiry, jlong pass_expiry,
-                                                                  jint attrs, jstring policy) {
+                                                                  jint attrs, jstring policy, jint mask) {
 	krbconn_context_t* ctx = getContext(env, this);
 	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
-	/* FIXME: dynamicaly according to available attributes */
-	int mask = KRBCONN_PRINC_EXPIRE_TIME | KRBCONN_PW_EXPIRATION | KRBCONN_ATTRIBUTES | KRBCONN_POLICY;
 
 	const char* temp;
 	char* str;

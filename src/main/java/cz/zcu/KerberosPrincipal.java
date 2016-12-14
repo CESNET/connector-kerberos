@@ -3,6 +3,13 @@ package cz.zcu;
 import org.identityconnectors.framework.common.objects.*;
 
 public class KerberosPrincipal {
+	public static final int KRBCONN_PRINCIPAL         = 0x0001;
+	public static final int KRBCONN_PRINC_EXPIRE_TIME = 0x0002;
+	public static final int KRBCONN_PW_EXPIRATION     = 0x0004;
+	public static final int KRBCONN_LAST_PWD_CHANGE   = 0x0008;
+	public static final int KRBCONN_ATTRIBUTES        = 0x0010;
+	public static final int KRBCONN_POLICY            = 0x0800;
+
 	private String name;
 	private long princExpiry;
 	private long pwdExpiry;
