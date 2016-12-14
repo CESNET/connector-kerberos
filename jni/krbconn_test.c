@@ -145,6 +145,20 @@ int main(int argc, char **argv) {
 			goto end;
 		}
 		printf("%s modified\n", principal.name);
+	} else if (strcmp(command, "cpw") == 0) {
+		if (optind >= argc) {
+			printf("Password argument required for 'cpw' command\n");
+			code = 1;
+			goto end;
+		}
+		printf("Principal:       %s\n", arg);
+		if ((code = krbconn_chpass(&ctx, arg, argv[optind]))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("Password of %s changed\n", arg);
 	}
 
 end:

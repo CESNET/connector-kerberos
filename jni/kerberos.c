@@ -252,7 +252,7 @@ long krbconn_chpass(krbconn_context_t *ctx, const char *princ_name, char *passwo
 	krb5_principal krbprinc;
 
 	if ((code = krb5_parse_name(ctx->krb, princ_name, &krbprinc)) != 0) return code;
-	code = kadm5_chpass_principal(ctx->krb, krbprinc, password);
+	code = kadm5_chpass_principal(ctx->handle, krbprinc, password);
 	krb5_free_principal(ctx->krb, krbprinc);
 
 	return code;
