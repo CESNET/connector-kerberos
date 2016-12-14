@@ -374,9 +374,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 	}
 
 	long err = krbconn_create(ctx, princ, mask, pass_str);
-	free(princ->name);
-	free(princ->policy);
 	free(pass_str);
+	krbconn_free_principal(princ);
 	free(princ);
 
 	if (err != 0) {
@@ -406,7 +405,6 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 		char* errMsg = krbconn_error(ctx, err);
 		throwKerberosException(env, errMsg);
 		free(errMsg);
-		return;
 	}
 }
 
