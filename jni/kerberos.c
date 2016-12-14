@@ -129,15 +129,17 @@ static long krbconn_fill_princrec(krb5_context krb, kadm5_principal_ent_rec *krb
 		mask |= KADM5_PW_EXPIRATION;
 		krbrec->pw_expiration = info->pwd_expire;
 	}
-	/* TODO: check NULL attributes */
 	if ((mask_in & KRBCONN_ATTRIBUTES) != 0) {
 		mask |= KADM5_ATTRIBUTES;
 		krbrec->attributes = info->attributes;
 	}
-	/* TODO: check clearing the policy */
 	if ((mask_in & KRBCONN_POLICY) != 0) {
-		mask |= KADM5_POLICY;
-		krbrec->policy = info->policy;
+		if (info->policy) {
+			mask |= KADM5_POLICY;
+			krbrec->policy = info->policy;
+		} else {
+			mask |= KADM5_POLICY_CLR;
+		}
 	}
 
 	*mask_out = mask;
