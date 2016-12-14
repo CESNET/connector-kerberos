@@ -121,7 +121,6 @@ static long krbconn_fill_princrec(krb5_context krb, kadm5_principal_ent_rec *krb
 
 	memset(krbrec, 0, sizeof(*krbrec));
 	krbrec->principal = krbprinc;
-	mask |= KADM5_PRINCIPAL;
 	if ((mask_in & KRBCONN_PRINC_EXPIRE_TIME) != 0) {
 		mask |= KADM5_PRINC_EXPIRE_TIME;
 		krbrec->princ_expire_time = info->princ_expire;
@@ -182,7 +181,7 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 
 long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, int mask, char *pass) {
 	kadm5_principal_ent_rec krbrec;
-	long krbmask = 0;
+	long krbmask = KADM5_PRINCIPAL; /* required (only) during creating */
 	long code;
 
 	if ((code = krbconn_fill_princrec(ctx->krb, &krbrec, &krbmask, info, mask)) != 0) return code;
