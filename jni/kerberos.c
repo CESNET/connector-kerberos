@@ -345,6 +345,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 
 	const char* temp;
 	char* str;
+	char *pass_str = NULL;
 
 	if (name != NULL) {
 		temp = (*env)->GetStringUTFChars(env, name, 0);
@@ -368,15 +369,15 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 
 	if (pass != NULL) {
 		temp = (*env)->GetStringUTFChars(env, pass, 0);
-		str = strdup(temp);
+		pass_str = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, pass, temp);
 		(*env)->DeleteLocalRef(env, pass);
 	}
 
-	long err = krbconn_create(ctx, princ, mask, str);
+	long err = krbconn_create(ctx, princ, mask, pass_str);
 	free(princ->name);
 	free(princ->policy);
-	free(str);
+	free(pass_str);
 	free(princ);
 
 	if (err != 0) {
@@ -390,7 +391,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, jobject this, jstring name) {
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
-	char* str;
+	char* str = NULL;
 
 	if (name != NULL) {
 		temp = (*env)->GetStringUTFChars(env, name, 0);
