@@ -76,7 +76,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd
  * Method:    krb5_modify
  * Signature: (Ljava/lang/String;JJILjava/lang/String;I)V
  */
-JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify
   (JNIEnv *, jobject, jstring, jlong, jlong, jint, jstring, jint);
 
 #ifdef __cplusplus

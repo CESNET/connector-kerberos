@@ -474,15 +474,97 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 }
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, jobject this, jstring name, jstring newName) {
-	//TODO
+	krbconn_context_t* ctx = getContext(env, this);
+	const char* temp;
+
+	temp = (*env)->GetStringUTFChars(env, name, 0);
+	char* princ_old_name = strdup(temp);
+	(*env)->ReleaseStringUTFChars(env, name, temp);
+	(*env)->DeleteLocalRef(env, name);
+
+	temp = (*env)->GetStringUTFChars(env, newName, 0);
+	char* princ_new_name = strdup(temp);
+	(*env)->ReleaseStringUTFChars(env, newName, temp);
+	(*env)->DeleteLocalRef(env, newName);
+
+	long err = krbconn_rename(ctx, princ_old_name, princ_new_name);
+	free(princ_new_name);
+	free(princ_old_name);
+
+	if (err != 0) {
+		char* errMsg = krbconn_error(ctx, err);
+		throwKerberosException(env, errMsg);
+		free(errMsg);
+	}
 }
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env, jobject this, jstring name, jstring password) {
-	//TODO
+	krbconn_context_t* ctx = getContext(env, this);
+	const char* temp;
+
+	temp = (*env)->GetStringUTFChars(env, name, 0);
+	char* princ_name = strdup(temp);
+	(*env)->ReleaseStringUTFChars(env, name, temp);
+	(*env)->DeleteLocalRef(env, name);
+
+	temp = (*env)->GetStringUTFChars(env, password, 0);
+	char* princ_pass = strdup(temp);
+	(*env)->ReleaseStringUTFChars(env, password, temp);
+	(*env)->DeleteLocalRef(env, password);
+
+	long err = krbconn_chpass(ctx, princ_name, princ_pass);
+	free(princ_name);
+	free(princ_pass);
+
+	if (err != 0) {
+		char* errMsg = krbconn_error(ctx, err);
+		throwKerberosException(env, errMsg);
+		free(errMsg);
+	}
 }
 
-JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, jobject this, jstring name,
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, jobject this, jstring name,
                                                                      jlong princ_expiry, jlong password_expiry,
                                                                      jint attributes, jstring policy, jint mask) {
-	//TODO
+	krbconn_context_t* ctx = getContext(env, this);
+	const char* temp;
+
+	temp = (*env)->GetStringUTFChars(env, name, 0);
+	char* princ_name = strdup(temp);
+	(*env)->ReleaseStringUTFChars(env, name, temp);
+	(*env)->DeleteLocalRef(env, name);
+
+	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
+	memset(princ, 0, sizeof(princ));
+	krbconn_get(ctx, princ_name, princ);
+
+	if (mask & KRBCONN_PRINC_EXPIRE_TIME != 0) {
+		princ->princ_expire = princ_expiry;
+	}
+
+	if (mask & KRBCONN_PW_EXPIRATION != 0) {
+		princ->pwd_expire = password_expiry;
+	}
+
+	if (mask & KRBCONN_ATTRIBUTES != 0) {
+		princ->attributes = attributes;
+	}
+
+	if (mask & KRBCONN_POLICY != 0) {
+		temp = (*env)->GetStringUTFChars(env, policy, 0);
+		princ->policy = strdup(temp);
+		(*env)->ReleaseStringUTFChars(env, policy, temp);
+		(*env)->DeleteLocalRef(env, policy);
+	}
+
+	long err = krbconn_modify(ctx, princ, mask);
+	krbconn_free_principal(princ);
+	free(princ);
+	free(princ_name);
+
+	if (err != 0) {
+		char* errMsg = krbconn_error(ctx, err);
+		throwKerberosException(env, errMsg);
+		free(errMsg);
+	}
 }
