@@ -123,13 +123,17 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 				AttributeUtil.getStringValue(tempAttr);
 			}
 
-			if (name != null && password != null) {
-				krb5_create(name.getNameValue(), GuardedStringAccessor.getString(password), principalExpiry, passwordExpiry,
-						attributes, policy);
+			if (name != null) {
+				String guardedPassword = null;
+				if (password != null) {
+					guardedPassword = GuardedStringAccessor.getString(password);
+				}
 				logger.info("Creating Kerberos principal {0}", name.getNameValue());
+				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry,
+						attributes, policy);
 				return new Uid(AttributeUtil.getStringValue(name).toLowerCase());
 			} else {
-				throw new InvalidAttributeValueException("Name and password attributes are required");
+				throw new InvalidAttributeValueException("Name attribute is required");
 			}
 		} else {
 			logger.warn("Create of type {0} is not supported",
@@ -143,8 +147,8 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
-			krb5_delete(uid.getUidValue());
 			logger.info("Deleting Kerberos principal {0}", uid.getUidValue());
+			krb5_delete(uid.getUidValue());
 		} else {
 			logger.warn("Delete of type {0} is not supported",
 					configuration.getConnectorMessages().format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
@@ -228,19 +232,19 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			}
 
 			if (mask != 0) {
-				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes, policy, mask);
 				logger.info("Modifying Kerberos principal {0}: mask {1}", uid.getUidValue(), mask);
+				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes, policy, mask);
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_NAME)) {
-				krb5_chpasswd(uid.getUidValue(), GuardedStringAccessor.getString(attributesAccessor.getPassword()));
 				logger.info("Changing password of Kerberos principal {0}", uid.getUidValue());
+				krb5_chpasswd(uid.getUidValue(), GuardedStringAccessor.getString(attributesAccessor.getPassword()));
 			}
 
 			if (attributesAccessor.hasAttribute(Name.NAME)) {
-				krb5_rename(uid.getUidValue(), attributesAccessor.getName().getNameValue());
 				returnUid = new Uid(attributesAccessor.getName().getNameValue());
 				logger.info("Renaming Kerberos principal {0} to {1}", uid.getUidValue(), returnUid.getUidValue());
+				krb5_rename(uid.getUidValue(), attributesAccessor.getName().getNameValue());
 			}
 		} else {
 			logger.warn("Update of type {0} is not supported",
