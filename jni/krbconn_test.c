@@ -127,8 +127,6 @@ int main(int argc, char **argv) {
 		printf("\n");
 		krbconn_free_list(&ctx, list, count);
 	} else if (strcmp(command, "modify") == 0) {
-		int mask = 0;
-
 		memset(&principal, 0, sizeof principal);
 		principal.name = arg;
 		if (optind < argc) {

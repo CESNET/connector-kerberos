@@ -458,7 +458,7 @@ kadm5_ret_t kadm5_free_name_list(
 kadm5_ret_t kadm5_chpass_principal(
 	void *server_handle,
 	krb5_principal principal,
-	char *pass)
+	char *pass __attribute__((unused)))
 {
 	int i;
 	_kadm5_handle *handle = server_handle;
