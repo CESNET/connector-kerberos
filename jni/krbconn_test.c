@@ -6,13 +6,25 @@
 #include "kerberos.h"
 
 
+#define DEFAULT_PRINCIPAL "host/pokuston.civ.zcu.cz"
+
+
 void usage(const char *name) {
-	printf("Usage: %s [OPTIONS] [get|create]\n\
-OPTIONS are:\n\
+	printf("Usage: %s [OPTIONS] [COMMAND]\n\
+OPTIONS:\n\
   -h ............. usage\n\
   -k FILE ........ keytab file\n\
   -u PRINCIPAL ... admin principal\n\
   -p PASSWORD .... admin password\n\
+  -r REALM ....... Kerberos realm\n\
+\n\
+COMMAND:\n\
+  get [PRINCIPAL]\n\
+  create [PRINCIPAL]\n\
+  delete [PRINCIPAL]\n\
+  list\n\
+  modify [PRINCIPAL] [POLICY]\n\
+  cpw PRINCIPAL PASSWORD\n\
 ", name);
 }
 
@@ -25,7 +37,7 @@ int main(int argc, char **argv) {
 	krbconn_principal_t principal;
 	char c;
 	const char *command = "get";
-	char *arg = "host/pokuston.civ.zcu.cz";
+	char *arg = DEFAULT_PRINCIPAL;
 
 	memset(&config, 0, sizeof config);
 	while ((c = getopt(argc, argv, "hu:p:k:r:")) != -1) {
