@@ -1,5 +1,6 @@
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -25,6 +26,7 @@ COMMAND:\n\
   list\n\
   modify [PRINCIPAL] [POLICY]\n\
   cpw PRINCIPAL PASSWORD\n\
+  error CODE\n\
 ", name);
 }
 
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
 
 	if ((code = krbconn_init(&ctx, &config)) != 0) {
 		err = krbconn_error(&ctx, code);
-		printf("%s\n", err);
+		printf("%ld: %s\n", code, err);
 		free(err);
 		goto end;
 	}
@@ -171,6 +173,14 @@ int main(int argc, char **argv) {
 			goto end;
 		}
 		printf("Password of %s changed\n", arg);
+	} else if (strcmp(command, "error") == 0) {
+		long code;
+
+		code = atol(arg);
+		err = krbconn_error(&ctx, code);
+		printf("Error code: %ld\n", code);
+		printf("MIT Krb5 message: %s\n", err);
+		free(err);
 	}
 
 end:
