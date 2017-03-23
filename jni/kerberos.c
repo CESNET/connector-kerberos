@@ -27,7 +27,7 @@ char *krbconn_error(krbconn_context_t *ctx, long code) {
 
 long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
 	kadm5_config_params params;
-	kadm5_ret_t code = 0;
+	kadm5_ret_t code = KADM5_BAD_CLIENT_PARAMS;
 	void *handle = NULL;
 
 	if (ctx->handle) {
