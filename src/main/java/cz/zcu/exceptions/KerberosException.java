@@ -3,6 +3,8 @@ package cz.zcu.exceptions;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 public class KerberosException extends ConnectorException {
+	private static final long serialVersionUID = 5556264615426604866L;
+
 	public KerberosException(String message) {
 		super(message);
 	}

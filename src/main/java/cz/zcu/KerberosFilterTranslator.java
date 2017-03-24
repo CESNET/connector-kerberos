@@ -21,8 +21,6 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createContainsExpression(ContainsFilter filter, boolean not) {
-		String name = filter.getAttribute().getName();
-
 		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
 			filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
@@ -45,8 +43,6 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createEndsWithExpression(EndsWithFilter filter, boolean not) {
-		String name = filter.getAttribute().getName();
-
 		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
 				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
@@ -69,8 +65,6 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createStartsWithExpression(StartsWithFilter filter, boolean not) {
-		String name = filter.getAttribute().getName();
-
 		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
 				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
@@ -93,8 +87,6 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createEqualsExpression(EqualsFilter filter, boolean not) {
-		String name = filter.getAttribute().getName();
-
 		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
 				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());

@@ -72,9 +72,9 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		configuration = null;
 	}
 
-	private native void krb5_init(Class gsAccessor) throws KerberosException;
+	private native void krb5_init(Class<GuardedStringAccessor> gsAccessor) throws KerberosException;
 	private native void krb5_destroy();
-	private native void krb5_renew(Class gsAccessor) throws KerberosException;
+	private native void krb5_renew(Class<GuardedStringAccessor> gsAccessor) throws KerberosException;
 	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy, int mask) throws KerberosException;
 	private native void krb5_delete(String name) throws KerberosException;
 	private native void krb5_rename(String name, String newName) throws KerberosException;
