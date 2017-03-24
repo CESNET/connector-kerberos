@@ -13,12 +13,23 @@ char *krbconn_error(krbconn_context_t *ctx, long code) {
 	const char *krbmsg;
 	char *text;
 
-	if (ctx->krb) {
+	/*
+	 * krb5_get_error_message() won't work without connection (server
+	 * handle) - using own error message for kadm5 codes set by krbconn code
+	 */
+	if (ctx->krb && ctx->handle) {
 		krbmsg = krb5_get_error_message(ctx->krb, code);
 		asprintf(&text, "Kerberos error %ld: %s", code, krbmsg);
 		krb5_free_error_message(ctx->krb, krbmsg);
 	} else {
-		asprintf(&text, "Kerberos error %ld: (no details)", code);
+		switch(code) {
+			case KADM5_BAD_CLIENT_PARAMS:
+				asprintf(&text, "Kerberos error %ld: missing credentials", code);
+				break;
+			default:
+				asprintf(&text, "Kerberos error %ld: (no details)", code);
+				break;
+		}
 	}
 
 	return text;
