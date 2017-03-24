@@ -315,9 +315,17 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, jobject this) {
 	krbconn_context_t* ctx = getContext(env, this);
+	jclass cls;
+	jfieldID fid;
 
 	krbconn_destroy(ctx);
 	free(ctx);
+
+	//Clear context
+	cls = (*env)->GetObjectClass(env, this);
+	fid = (*env)->GetFieldID(env, cls, "contextPointer", "J");
+	(*env)->SetLongField(env, this, fid, (jlong)NULL);
+	(*env)->DeleteLocalRef(env, cls);
 }
 
 
