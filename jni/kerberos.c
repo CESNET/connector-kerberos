@@ -85,6 +85,7 @@ long krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 
 
 void krbconn_destroy(krbconn_context_t *ctx) {
+	if (!ctx) return;
 	if (ctx->handle) kadm5_destroy(ctx->handle);
 	if (ctx->krb) krb5_free_context(ctx->krb);
 	memset(ctx, 0, sizeof(*ctx));
