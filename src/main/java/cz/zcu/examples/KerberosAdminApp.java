@@ -20,6 +20,7 @@ public class KerberosAdminApp {
 		System.out.println("OPTIONS are:");
 		System.out.println("  -h, --help ...... " + options.getOption("h").getDescription());
 		System.out.println("  -k, --keytab .... " + options.getOption("k").getDescription());
+		System.out.println("  -p, --password ..... " + options.getOption("p").getDescription());
 		System.out.println("  -r, --realm ..... " + options.getOption("r").getDescription());
 		System.out.println("  -u, --user ...... " + options.getOption("u").getDescription());
 	}
@@ -32,6 +33,7 @@ public class KerberosAdminApp {
 		options.addOption("h", "help", false, "usage message");
 		options.addOption("k", "keytab", true, "admin keytab");
 		options.addOption("r", "realm", true, "kerberos realm");
+		options.addOption("p", "password", true, "admin password");
 		options.addOption("u", "user", true, "admin principal");
 
 		try {
@@ -44,6 +46,10 @@ public class KerberosAdminApp {
 			if(line.hasOption("k")) {
 				config.setKeytab(line.getOptionValue("k"));
 				System.out.println("Keytab: " + config.getKeytab());
+			}
+			if(line.hasOption("p")) {
+				config.setPassword(new GuardedString(line.getOptionValue("p").toCharArray()));
+				System.out.println("Password: (obtained)");
 			}
 			if(line.hasOption("r")) {
 				config.setRealm(line.getOptionValue("r"));
@@ -59,7 +65,7 @@ public class KerberosAdminApp {
 			return;
 		}
 
-		if (config.getKeytab() == null || config.getKeytab().equals("")) {
+		if ((config.getKeytab() == null || config.getKeytab().equals("")) && config.getPassword() == null) {
 			char[] pass = System.console().readPassword("Enter password: ");
 			config.setPassword(new GuardedString(pass));
 			Arrays.fill(pass, '\0');
