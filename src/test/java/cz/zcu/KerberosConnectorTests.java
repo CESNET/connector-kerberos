@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.security.GuardedString;
+//import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
@@ -14,14 +14,11 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
-import org.identityconnectors.framework.common.objects.PredefinedAttributes;
+//import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
+//import org.identityconnectors.framework.common.objects.Schema;
+//import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
-import org.identityconnectors.framework.common.objects.SyncDelta;
-import org.identityconnectors.framework.common.objects.SyncResultsHandler;
-import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
@@ -62,6 +59,7 @@ public class KerberosConnectorTests {
         //Configuration config = new KerberosConfiguration();
         //Map<String, ? extends Object> configData = (Map<String, ? extends Object>) PROPERTIES.getProperty("configuration",Map.class)
         //TestHelpers.fillConfiguration(
+		//System.out.println("configuration" + PROPERTIES);
     }
 
     @AfterClass
@@ -107,7 +105,7 @@ public class KerberosConnectorTests {
         logger.info("Running Delete Test");
         final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        facade.delete(ObjectClass.ACCOUNT, new Uid("username"), builder.build());
+        facade.delete(ObjectClass.ACCOUNT, new Uid("user3"), builder.build());
     }
 
 
@@ -122,8 +120,8 @@ public class KerberosConnectorTests {
         builder.setAttributesToGet(Name.NAME);
         ConnectorObject co =
                 facade.getObject(ObjectClass.ACCOUNT, new Uid(
-                        "3f50eca0-f5e9-11e3-a3ac-0800200c9a66"), builder.build());
-        Assert.assertEquals(co.getName().getNameValue(), "Foo");
+                        "user2@EXAMPLE.COM"), builder.build());
+        Assert.assertEquals(co.getName().getNameValue(), "user2@EXAMPLE.COM");
     }
 
     @Test
@@ -135,9 +133,9 @@ public class KerberosConnectorTests {
         final ResultsHandler handler = new ToListResultsHandler();
 
         SearchResult result =
-                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("Foo")), handler,
+                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2@EXAMPLE.COM")), handler,
                         builder.build());
-        Assert.assertEquals(result.getPagedResultsCookie(), "0");
+        Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
         Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
     }
 
@@ -162,10 +160,10 @@ public class KerberosConnectorTests {
         final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
         final OperationOptionsBuilder builder = new OperationOptionsBuilder();
         Set<Attribute> updateAttributes = new HashSet<Attribute>();
-        updateAttributes.add(new Name("Foo"));
+        updateAttributes.add(new Name("user-new"));
 
-        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("Foo"), updateAttributes, builder.build());
-        Assert.assertEquals(uid.getUidValue(), "foo");
+        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("user"), updateAttributes, builder.build());
+        Assert.assertEquals(uid.getUidValue(), "user-new");
     }
 
 

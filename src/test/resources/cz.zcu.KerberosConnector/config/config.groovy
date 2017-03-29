@@ -7,16 +7,14 @@ import org.identityconnectors.common.security.GuardedString
 
 
 configuration{
-    ssl = false
-    principal="__configureme__"
-    remoteUser="__configureme__"
-    password=new GuardedString("__configureme__".toCharArray())
+    // see jni/kadm5_fake.c
+    principal="admin@EXAMPLE.COM"
+    password=new GuardedString("password".toCharArray())
 }
 
 environments {
     CaseSuccess{
         configuration {
-            ssl = true
         }
     }
     CaseOther {

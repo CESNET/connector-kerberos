@@ -8,6 +8,7 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -16,19 +17,23 @@ public class KerberosAdminApp {
 	static KerberosConfiguration config = new KerberosConfiguration();
 
 	public static void usage(Options options) {
-		System.out.println("KerberosAdminApp [OPTIONS]");
+		System.out.println("KerberosAdminApp [OPTIONS] COMMAND");
 		System.out.println("OPTIONS are:");
 		System.out.println("  -h, --help ...... " + options.getOption("h").getDescription());
 		System.out.println("  -k, --keytab .... " + options.getOption("k").getDescription());
-		System.out.println("  -p, --password ..... " + options.getOption("p").getDescription());
+		System.out.println("  -p, --password .. " + options.getOption("p").getDescription());
 		System.out.println("  -r, --realm ..... " + options.getOption("r").getDescription());
 		System.out.println("  -u, --user ...... " + options.getOption("u").getDescription());
+		System.out.println("COMMAND is:");
+		System.out.println("  search ... paged search example");
+		System.out.println("  test ..... test connection");
 	}
 
 	public static void main(String[] args) {
 		config = new KerberosConfiguration();
 		CommandLineParser parser = new DefaultParser();
 		Options options = new Options();
+		List<String> commands;
 
 		options.addOption("h", "help", false, "usage message");
 		options.addOption("k", "keytab", true, "admin keytab");
@@ -59,6 +64,8 @@ public class KerberosAdminApp {
 				config.setPrincipal(line.getOptionValue("u"));
 				System.out.println("Principal: " + config.getPrincipal());
 			}
+
+			commands = line.getArgList();
 		}
 		catch(ParseException exp) {
 			System.out.println("Invalid arguments: " + exp.getMessage());
@@ -74,35 +81,45 @@ public class KerberosAdminApp {
 		connector.init(config);
 		System.out.println(Long.toHexString(connector.getContextPointer()));
 
-		Map<String, Object> opts = new HashMap<String, Object>();
-		opts.put(OperationOptions.OP_PAGE_SIZE, 20);
-		opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 81);
+		for (String command : commands) {
+			if ("search".equals(command)) {
+				System.out.println("Command: search");
+				Map<String, Object> opts = new HashMap<String, Object>();
+				opts.put(OperationOptions.OP_PAGE_SIZE, 20);
+				opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 81);
 
-		OperationOptions op = new OperationOptions(opts);
+				OperationOptions op = new OperationOptions(opts);
 
-		connector.executeQuery(null, null, new PrintResultsHandler(), op);
+				connector.executeQuery(null, null, new PrintResultsHandler(), op);
 
-		opts.remove(OperationOptions.OP_PAGED_RESULTS_OFFSET);
-		opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 101);
-		op = new OperationOptions(opts);
+				opts.remove(OperationOptions.OP_PAGED_RESULTS_OFFSET);
+				opts.put(OperationOptions.OP_PAGED_RESULTS_OFFSET, 101);
+				op = new OperationOptions(opts);
 
-		connector.executeQuery(null, null, new PrintResultsHandler(), op);
+				connector.executeQuery(null, null, new PrintResultsHandler(), op);
 
-		Thread[] thrs = new Thread[10];
-		for (int i = 0; i < thrs.length; i++) {
-			thrs[i] = new Thread(new ExampleThread());
-			thrs[i].start();
-		}
+				Thread[] thrs = new Thread[10];
+				for (int i = 0; i < thrs.length; i++) {
+					thrs[i] = new Thread(new ExampleThread());
+					thrs[i].start();
+				}
 
-		for (int i = 0; i < thrs.length; i++) {
-			try {
-				thrs[i].join();
-			} catch (InterruptedException e) {
-				System.out.println(e.getMessage());
+				for (int i = 0; i < thrs.length; i++) {
+					try {
+						thrs[i].join();
+					} catch (InterruptedException e) {
+						System.out.println(e.getMessage());
+					}
+				}
+
+				System.out.println();
+			} else if ("test".equals(command)) {
+				System.out.println("Command: test");
+				connector.test();
+				System.out.println();
 			}
 		}
 
 		connector.dispose();
 	}
-
 }

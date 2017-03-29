@@ -1,6 +1,8 @@
 package cz.zcu;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 import cz.zcu.exceptions.KerberosException;
 import org.identityconnectors.common.logging.Log;
@@ -21,7 +23,7 @@ import org.identityconnectors.framework.spi.operations.*;
 @ConnectorClass(
 		displayNameKey = "Kerberos.connector.display",
 		configurationClass = KerberosConfiguration.class)
-public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, UpdateOp, SchemaOp {
+public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, UpdateOp, SchemaOp, TestOp {
 
 	/**
 	 * Setup logging for the {@link KerberosConnector}.
@@ -258,6 +260,12 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			throw new UnsupportedOperationException("Update of type" + objectClass.getObjectClassValue() + " is not supported");
 		}
 		return returnUid;
+	}
+
+
+	public void test() {
+		logger.info("test()");
+		krb5_renew(GuardedStringAccessor.class);
 	}
 
 

@@ -10,6 +10,6 @@ public class PrintResultsHandler implements SearchResultsHandler {
 	}
 
 	public void handleResult(SearchResult result) {
-		System.out.println("Progress: " + result.getRemainingPagedResults() + "remaining");
+		System.out.println("Progress: " + result.getRemainingPagedResults() + " results");
 	}
 }
