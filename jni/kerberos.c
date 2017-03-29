@@ -238,20 +238,22 @@ long krbconn_delete(krbconn_context_t *ctx, char *name) {
 
 long krbconn_list(krbconn_context_t *ctx, const char *search, char ***list, int *count) {
 	long code;
-	char *exp;
+	char *exp = NULL;
 
 	*list = NULL;
 	*count = 0;
 
 	/* add realm to the query */
-	if (search && strchr(search, '@')) {
-		exp = strdup(search);
-	} else {
-		size_t len = strlen(search);
-		exp = malloc(len + 1 + strlen(ctx->realm) + 1);
-		memcpy(exp, search, len);
-		exp[len] = '@';
-		strcpy(exp + len + 1, ctx->realm);
+	if (search) {
+		if (strchr(search, '@')) {
+			exp = strdup(search);
+		} else {
+			size_t len = strlen(search);
+			exp = malloc(len + 1 + strlen(ctx->realm) + 1);
+			memcpy(exp, search, len);
+			exp[len] = '@';
+			strcpy(exp + len + 1, ctx->realm);
+		}
 	}
 	code = kadm5_get_principals(ctx->handle, exp, list, count);
 	free(exp);

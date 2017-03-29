@@ -142,6 +142,25 @@ public class KerberosConnectorTests {
 
 
     @Test
+	/**
+	 * Test search with empty filter.
+	 */
+    public void searchAllTest() {
+        logger.info("Running Search All Test");
+        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+        builder.setPageSize(10);
+        final ResultsHandler handler = new ToListResultsHandler();
+
+        SearchResult result =
+                facade.search(ObjectClass.ACCOUNT, null, handler,
+                        builder.build());
+        Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+        Assert.assertTrue(((ToListResultsHandler) handler).getObjects().size() > 1);
+    }
+
+
+    @Test
     public void testTest() {
         logger.info("Running Test Test");
         final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
