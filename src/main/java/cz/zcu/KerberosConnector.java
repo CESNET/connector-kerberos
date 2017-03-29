@@ -61,6 +61,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 */
 	public void init(final Configuration configuration) {
 		this.configuration = (KerberosConfiguration) configuration;
+		logger.info("Initializing resource with realm {0}", this.configuration.getRealm());
 		krb5_init(GuardedStringAccessor.class);
 	}
 
@@ -70,6 +71,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 	 * @see org.identityconnectors.framework.spi.Connector#dispose()
 	 */
 	public void dispose() {
+		logger.info("Disposing resource");
 		krb5_destroy();
 		configuration = null;
 	}
@@ -264,7 +266,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 
 	public void test() {
-		logger.info("test()");
+		logger.info("Testing connection and credentials");
 		krb5_renew(GuardedStringAccessor.class);
 	}
 
