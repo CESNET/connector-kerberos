@@ -27,6 +27,7 @@ COMMAND:\n\
   modify [PRINCIPAL] [POLICY]\n\
   cpw PRINCIPAL PASSWORD\n\
   error CODE\n\
+  renew [PRINCIPAL]\n\
 ", name);
 }
 
@@ -181,6 +182,14 @@ int main(int argc, char **argv) {
 		printf("Error code: %ld\n", code);
 		printf("MIT Krb5 message: %s\n", err);
 		free(err);
+	} else if (strcmp(command, "renew") == 0) {
+		if ((code = krbconn_renew(&ctx, &config)) != 0) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("Renew of %s successfull\n", config.principal);
 	}
 
 end:
