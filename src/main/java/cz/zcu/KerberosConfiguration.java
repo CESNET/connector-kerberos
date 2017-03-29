@@ -17,7 +17,7 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	/**
 	 * Kerberos realm to work with.
 	 */
-	private String realm;
+	private String realm = null;
 
 	/**
 	 * The principal to authenticate with.
