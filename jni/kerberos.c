@@ -40,21 +40,33 @@ long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
 	kadm5_config_params params;
 	kadm5_ret_t code = KADM5_BAD_CLIENT_PARAMS;
 	void *handle = NULL;
+	char *default_realm = NULL;
 
 	if (ctx->handle) {
 		kadm5_destroy(ctx->handle);
 		ctx->handle = NULL;
 	}
 
+	if (!config->realm) {
+		char *realm;
+
+		code = krb5_get_default_realm(ctx->krb, &realm);
+		if (code != 0) return code;
+		default_realm = strdup(realm);
+		krb5_free_default_realm(ctx->krb, realm);
+	}
+
 	memset(&params, 0, sizeof params);
 	params.mask |= KADM5_CONFIG_REALM;
-	params.realm = config->realm;
+	params.realm = config->realm ? : default_realm;
 
 	if (config->keytab) {
 		code = kadm5_init_with_skey(ctx->krb, config->principal, config->keytab, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
 	} else if (config->password) {
 		code = kadm5_init_with_password(ctx->krb, config->principal, config->password, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
 	}
+
+	free(default_realm);
 	if (code != 0) return code;
 	ctx->handle = handle;
 
@@ -70,15 +82,6 @@ long krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 	code = kadm5_init_krb5_context(&krb);
 	if (code != 0) return code;
 	ctx->krb = krb;
-
-	if (!config->realm) {
-		char *realm;
-
-		code = krb5_get_default_realm(krb, &realm);
-		if (code != 0) return code;
-		config->realm = strdup(realm);
-		krb5_free_default_realm(krb, realm);
-	}
 
 	return krbconn_renew(ctx, config);
 }
