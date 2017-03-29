@@ -29,6 +29,7 @@ typedef struct {
 
 typedef struct {
 	krb5_context krb;
+	char *realm;
 	void *handle;
 } krbconn_context_t;
 
@@ -55,7 +56,7 @@ void krbconn_free_principal(krbconn_principal_t *principal);
 long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *result);
 long krbconn_create(krbconn_context_t *ctx, krbconn_principal_t *info, int mask, char *pass);
 long krbconn_delete(krbconn_context_t *ctx, char *name);
-long krbconn_list(krbconn_context_t *ctx, char *search, char ***list, int *count);
+long krbconn_list(krbconn_context_t *ctx, const char *search, char ***list, int *count);
 void krbconn_free_list(krbconn_context_t *ctx, char **list, int count);
 long krbconn_modify(krbconn_context_t *ctx, krbconn_principal_t *info, int mask);
 long krbconn_rename(krbconn_context_t *ctx, const char *oldname, const char *newname);

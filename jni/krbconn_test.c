@@ -23,7 +23,7 @@ COMMAND:\n\
   get [PRINCIPAL]\n\
   create [PRINCIPAL]\n\
   delete [PRINCIPAL]\n\
-  list\n\
+  list [QUERY]\n\
   modify [PRINCIPAL] [POLICY]\n\
   cpw PRINCIPAL PASSWORD\n\
   error CODE\n\
@@ -128,9 +128,12 @@ int main(int argc, char **argv) {
 		printf("%s deleted\n", principal.name);
 	} else if (strcmp(command, "list") == 0) {
 		char **list;
+		const char *query = NULL;
 		int i, count;
 
-		if ((code = krbconn_list(&ctx, "*_adm", &list, &count))) {
+		query = arg;
+		printf("Listing, query = %s\n", query);
+		if ((code = krbconn_list(&ctx, query, &list, &count))) {
 			err = krbconn_error(&ctx, code);
 			printf("%s\n", err);
 			free(err);

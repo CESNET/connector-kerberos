@@ -59,7 +59,7 @@ public class KerberosConnectorTests {
         //Configuration config = new KerberosConfiguration();
         //Map<String, ? extends Object> configData = (Map<String, ? extends Object>) PROPERTIES.getProperty("configuration",Map.class)
         //TestHelpers.fillConfiguration(
-		//System.out.println("configuration" + PROPERTIES);
+        //System.out.println("configuration" + PROPERTIES);
     }
 
     @AfterClass
@@ -120,8 +120,9 @@ public class KerberosConnectorTests {
         builder.setAttributesToGet(Name.NAME);
         ConnectorObject co =
                 facade.getObject(ObjectClass.ACCOUNT, new Uid(
-                        "user2@EXAMPLE.COM"), builder.build());
-        Assert.assertEquals(co.getName().getNameValue(), "user2@EXAMPLE.COM");
+                        "user2"), builder.build());
+        Assert.assertNotNull(co);
+        Assert.assertEquals(co.getName().getNameValue(), "user2");
     }
 
     @Test
@@ -133,7 +134,7 @@ public class KerberosConnectorTests {
         final ResultsHandler handler = new ToListResultsHandler();
 
         SearchResult result =
-                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2@EXAMPLE.COM")), handler,
+                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2")), handler,
                         builder.build());
         Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
         Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);

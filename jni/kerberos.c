@@ -40,25 +40,27 @@ long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
 	kadm5_config_params params;
 	kadm5_ret_t code = KADM5_BAD_CLIENT_PARAMS;
 	void *handle = NULL;
-	char *default_realm = NULL;
 
 	if (ctx->handle) {
 		kadm5_destroy(ctx->handle);
 		ctx->handle = NULL;
 	}
+	free(ctx->realm);
 
-	if (!config->realm) {
+	if (config->realm) {
+		ctx->realm = strdup(config->realm);
+	} else {
 		char *realm;
 
 		code = krb5_get_default_realm(ctx->krb, &realm);
 		if (code != 0) return code;
-		default_realm = strdup(realm);
+		ctx->realm = strdup(realm);
 		krb5_free_default_realm(ctx->krb, realm);
 	}
 
 	memset(&params, 0, sizeof params);
 	params.mask |= KADM5_CONFIG_REALM;
-	params.realm = config->realm ? : default_realm;
+	params.realm = ctx->realm;
 
 	if (config->keytab) {
 		code = kadm5_init_with_skey(ctx->krb, config->principal, config->keytab, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
@@ -66,7 +68,6 @@ long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
 		code = kadm5_init_with_password(ctx->krb, config->principal, config->password, NULL, &params, KADM5_STRUCT_VERSION, KADM5_API_VERSION_4, NULL, &handle);
 	}
 
-	free(default_realm);
 	if (code != 0) return code;
 	ctx->handle = handle;
 
@@ -91,6 +92,7 @@ void krbconn_destroy(krbconn_context_t *ctx) {
 	if (!ctx) return;
 	if (ctx->handle) kadm5_destroy(ctx->handle);
 	if (ctx->krb) krb5_free_context(ctx->krb);
+	free(ctx->realm);
 	memset(ctx, 0, sizeof(*ctx));
 }
 
@@ -121,6 +123,19 @@ static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal princi
 	krb5_free_unparsed_name(krb, s);
 
 	return 0;
+}
+
+
+static void krbconn_princ_striprealm(char *name, const char *realm) {
+	size_t len, len_realm;
+
+	if (realm) {
+		len_realm = strlen(realm);
+		len = strlen(name);
+		if (len <= len_realm) return;
+		if (name[len - len_realm - 1] != '@') return;
+		name[len - len_realm - 1] = '\0';
+	}
 }
 
 
@@ -182,10 +197,12 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 
 	memset(result, 0, sizeof(*result));
 	if ((code = krbconn_princ2str(ctx->krb, krbresult.principal, &result->name)) != 0) return code;
+	krbconn_princ_striprealm(result->name, ctx->realm);
 	result->princ_expire = krbresult.princ_expire_time;
 	result->pwd_expire = krbresult.pw_expiration;
 	result->pwd_change = krbresult.last_pwd_change;
 	if ((code = krbconn_princ2str(ctx->krb, krbresult.mod_name, &result->mod_name)) != 0) return code;
+	krbconn_princ_striprealm(result->mod_name, ctx->realm);
 	result->mod_date = krbresult.mod_date;
 	result->attributes = krbresult.attributes;
 	if (krbresult.policy) result->policy = strdup(krbresult.policy);
@@ -219,10 +236,27 @@ long krbconn_delete(krbconn_context_t *ctx, char *name) {
 }
 
 
-long krbconn_list(krbconn_context_t *ctx, char *search, char ***list, int *count) {
+long krbconn_list(krbconn_context_t *ctx, const char *search, char ***list, int *count) {
+	long code;
+	char *exp;
+
 	*list = NULL;
 	*count = 0;
-	return kadm5_get_principals(ctx->handle, search, list, count);
+
+	/* add realm to the query */
+	if (search && strchr(search, '@')) {
+		exp = strdup(search);
+	} else {
+		size_t len = strlen(search);
+		exp = malloc(len + 1 + strlen(ctx->realm) + 1);
+		memcpy(exp, search, len);
+		exp[len] = '@';
+		strcpy(exp + len + 1, ctx->realm);
+	}
+	code = kadm5_get_principals(ctx->handle, exp, list, count);
+	free(exp);
+
+	return code;
 }
 
 
