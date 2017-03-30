@@ -109,7 +109,9 @@
 						<phase>validate</phase>
 						<configuration>
 							<executable>cmake</executable>
-							<arguments>${basedir}/jni</arguments>
+							<arguments>
+								<argument>${basedir}/jni</argument>
+							</arguments>
 							<workingDirectory>${project.build.directory}</workingDirectory>
 						</configuration>
 						<goals>
@@ -132,7 +134,9 @@
 						<phase>package</phase>
 						<configuration>
 							<executable>make</executable>
-							<arguments>package_source</arguments>
+							<arguments>
+								<argument>package_source</argument>
+							</arguments>
 							<workingDirectory>${project.build.directory}</workingDirectory>
 						</configuration>
 						<goals>
