@@ -16,7 +16,7 @@ public class KerberosPrincipal {
 	private long pwdChange;
 	private String modifyPrincipal;
 	private long modifyDate;
-	private int attributes;
+	private KerberosFlags attributes;
 	private String policy;
 
 	public KerberosPrincipal(String name, long princExpiry, long pwdExpiry, long pwdChange, String modifyPrincipal,
@@ -27,7 +27,7 @@ public class KerberosPrincipal {
 		this.pwdChange = pwdChange;
 		this.modifyPrincipal = modifyPrincipal;
 		this.modifyDate = modifyDate;
-		this.attributes = attributes;
+		this.attributes = new KerberosFlags(attributes);
 		this.policy = policy;
 	}
 
@@ -55,7 +55,7 @@ public class KerberosPrincipal {
 		return modifyDate;
 	}
 
-	public int getAttributes() {
+	public KerberosFlags getAttributes() {
 		return attributes;
 	}
 
@@ -63,18 +63,37 @@ public class KerberosPrincipal {
 		return policy;
 	}
 
+	/**
+	 * Principal status.
+	 */
+	public boolean enabled() {
+		return attributes.hasAllowTix();
+	}
+
 	public ConnectorObject toConnectorObject() {
 		ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
 
 		builder.setUid(name);
 		builder.setName(name);
-		builder.addAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, pwdExpiry);
-		builder.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, princExpiry);
-		builder.addAttribute("passwordChangeDate", pwdChange);
+		builder.addAttribute(OperationalAttributes.ENABLE_NAME, enabled());
+		if (pwdExpiry != 0)
+			builder.addAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, pwdExpiry);
+		if (princExpiry != 0)
+			builder.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, princExpiry);
+		if (pwdChange != 0)
+			builder.addAttribute("passwordChangeDate", pwdChange);
 		builder.addAttribute("modifyPrincipal", modifyPrincipal);
-		builder.addAttribute("modifyDate", modifyDate);
-		builder.addAttribute("attributes", attributes);
+		if (modifyDate != 0)
+			builder.addAttribute("modifyDate", modifyDate);
+		builder.addAttribute("attributes", attributes.getAttributes());
 		builder.addAttribute("policy", policy);
+
+		builder.addAttribute("allowTix", attributes.hasAllowTix());
+		builder.addAttribute("allowForwardable", attributes.hasAllowForwardable());
+		builder.addAttribute("allowRenewable", attributes.hasAllowRenewable());
+		builder.addAttribute("requiresPreauth", attributes.hasRequiresPreauth());
+		builder.addAttribute("requiresHwauth", attributes.hasRequiresHwauth());
+		builder.addAttribute("requiresPwchange", attributes.hasRequiresPwchange());
 
 		return builder.build();
 	}

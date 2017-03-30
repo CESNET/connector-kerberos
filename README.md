@@ -46,15 +46,21 @@ The native library (non-JNI part) can be checked using provided test example *kr
 
 * **name** (string): principal name (without the realm suffix)
 * **UID** (string, read-only): the same as **name**
-* **attributes** (int)
+* **attributes** (int): all Kerberos principal flags as integer mask
 * **policy** (string)
+* administrative status (ENABLE operational): true if enabled, mapped also to **attributes** and **allowTix**
 * (DISABLE\_DATE operational)
-* (ENABLE operational)
 * (PASSWORD operational)
 * **passwordExpirationDate** (PASSWORD\_EXPIRATION\_DATE operational)
 * **passwordChangeDate**
 * **modifyPrincipal**
 * **modifyDate**
+* **allowTix**: Kerberos principal flag, mapped also to **attributes** and administrative status
+* **allowForwardable**: Kerberos principal flag, mapped also to **attributes**
+* **allowRenewable**: Kerberos principal flag, mapped also to **attributes**
+* **requiresPreauth**: Kerberos principal flag, mapped also to **attributes**
+* **requiresHwauth**: Kerberos principal flag, mapped also to **attributes**
+* **requiresPwchange**: Kerberos principal flag, mapped also to **attributes**
 
 ## Capabilities
 
@@ -67,6 +73,13 @@ The native library (non-JNI part) can be checked using provided test example *kr
 #### Read
 
 #### Update
+
+Update is translated to the proper rename, change password, or modify Kadm5 library calls on the Kerberos principal.
+
+Note, the Kerberos principal flags are represented in schema using particular flag attributes and also by integer mask *attributes*. Also enable/disable is represented by *allowTix*. If any combination of values is used during modification:
+
+* particular flag attributes has precedence before *attributes*
+* enable/disable state has precedence before *allowTix*
 
 #### Paged Search
 

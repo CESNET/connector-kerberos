@@ -217,7 +217,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 			long principalExpiry = 0;
 			long passwordExpiry = 0;
-			int attributes = 0;
+			KerberosFlags attributes = new KerberosFlags(0);
 			String policy = null;
 			int mask = 0;
 
@@ -232,7 +232,7 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 			}
 
 			if (attributesAccessor.hasAttribute("attributes")) {
-				attributes = attributesAccessor.findInteger("attributes");
+				attributes = new KerberosFlags(attributesAccessor.findInteger("attributes"));
 				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 
@@ -241,9 +241,35 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 				mask |= KerberosPrincipal.KRBCONN_POLICY;
 			}
 
+			// set of principal flags to set
+			Set<String> flags = KerberosFlags.selectFlagAttributes(attributesAccessor.listAttributeNames());
+			// get current attributes if needed - when setting some flags or enable/disable
+			if (!attributesAccessor.hasAttribute("attributes") && (!flags.isEmpty() || attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME))) {
+				logger.info("Getting principal {0} to get current attributes", uid.getUidValue());
+				KerberosSearchResults results = krb5_search(uid.getUidValue(), 0, 0);
+				if (results.principals == null || results.principals.length != 1) {
+					throw new KerberosException("Modified principal " + uid.getUidValue() + " not found!");
+				}
+
+				attributes = results.principals[0].getAttributes();
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+			}
+			// modify principal attributes
+			for (String flag : flags) {
+				attributes.setFlag(flag, attributesAccessor.findBoolean(flag));
+			}
+			// enable/disable principal using "allowTix" flag
+			if (attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME)) {
+				boolean enable = attributesAccessor.findBoolean(OperationalAttributes.ENABLE_NAME);
+				attributes.setFlag("allowTix", enable);
+			}
+
 			if (mask != 0) {
+				if ((mask & KerberosPrincipal.KRBCONN_ATTRIBUTES) != 0) {
+					logger.info("New Kerberos principal attributes of {0}: {1}", uid.getUidValue(), attributes.getAttributes());
+				}
 				logger.info("Modifying Kerberos principal {0}: mask {1}", uid.getUidValue(), mask);
-				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes, policy, mask);
+				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes.getAttributes(), policy, mask);
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_NAME)) {
@@ -299,6 +325,10 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 
 		attributes.add(AttributeInfoBuilder.build("attributes", int.class));
 		attributes.add(AttributeInfoBuilder.build("policy", String.class));
+
+		for (String flag : KerberosFlags.flags) {
+			attributes.add(AttributeInfoBuilder.build(flag, boolean.class));
+		}
 
 		final ObjectClassInfo ociInfoAccount = new ObjectClassInfoBuilder().setType(ObjectClass.ACCOUNT_NAME).addAllAttributeInfo(attributes).build();
 		schemaBuilder.defineObjectClass(ociInfoAccount);
