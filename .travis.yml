@@ -1,0 +1,14 @@
+language: java
+
+# for cmake >= 2.8.11
+dist: trusty
+
+addons:
+  apt:
+    packages:
+      cmake
+      libkrb5-dev
+
+# libkadm5 >= 1.15 not required - fake library used in tests
+before_install:
+  - sed -e '/KRB5_VERSION VERSION_LESS/,+2d' -i jni/CMakeLists.txt
