@@ -1,0 +1,10 @@
+include(CheckCCompilerFlag)
+
+function(EnableCompilerFlag _flag)
+	message("Checking flag ${_flag}")
+	CHECK_C_COMPILER_FLAG(${_flag} C_FLAG)
+	if (C_FLAG)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_flag}" CACHE INTERNAL "C Flags")
+	endif ()
+	unset(C_FLAG CACHE)
+endfunction()
