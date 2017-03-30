@@ -412,29 +412,36 @@ kadm5_ret_t kadm5_rename_principal(
 }
 
 
+/**
+ * Get available principals.
+ *
+ * Query expression is handled only using plain string compare.
+ */
 kadm5_ret_t kadm5_get_principals(
 	void *server_handle,
-	char *exp __attribute__((unused)),
+	char *exp,
 	char ***princs,
 	int *count)
 {
-	int i;
+	int i, j;
 	char *name;
 	krb5_error_code err;
 	_kadm5_handle *handle = server_handle;
 	_krb5_context *ctx = handle->ctx;
 
-	*count = FAKE_N;
 	*princs = calloc(sizeof(char *), FAKE_N);
-	for (i = 0; i < (int)FAKE_N; i++) {
+	for (i = 0, j = 0; i < (int)FAKE_N; i++) {
 		err = krb5_unparse_name(ctx, fake_db[i].principal, &name);
 		if (err) {
 			for (i = i - 1; i >= 0; i--) free((*princs)[i]);
 			free(*princs);
 			return err;
 		}
-		(*princs)[i] = name;
+		if (!exp || (strcmp(exp, name) == 0)) {
+			(*princs)[j++] = name;
+		}
 	}
+	*count = j;
 
 	return 0;
 }
