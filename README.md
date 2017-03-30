@@ -1,14 +1,20 @@
 # Kerberos Connector
 
-Native Kerberos connector based on JNI and MIT libkadm5 library.
+Native Kerberos [Polygon+ConnId](https://wiki.evolveum.com/display/midPoint/Identity+Connectors) connector based on JNI and MIT libkadm5 library.
 
-The code is partially covered by unit-test.
+Tested with [midPoint](https://evolveum.com/) version 3.5.
+
+## Status
+
+Basic functionality is there. Several important features are missing. Also as typical for JNI technology and heavy development, it may crash all applications running, or eat your home pets.
+
+The code is partially covered by unit-tests.
 
 ## Requirements
 
 1. MIT Kerberos Admin library
 
- * libkadm5 >= 1.15 (for thread safetry)
+ * libkadm5 >= 1.15 (for thread safety)
 
 2. ConnId (specific version as needed)
 
