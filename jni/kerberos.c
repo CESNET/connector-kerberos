@@ -594,7 +594,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, j
 	(*env)->DeleteLocalRef(env, name);
 
 	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
-	krbconn_get(ctx, princ_name, princ);
+	princ->name = princ_name;
 
 	if ((mask & KRBCONN_PRINC_EXPIRE_TIME) != 0) {
 		princ->princ_expire = princ_expiry;
@@ -616,7 +616,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, j
 	}
 
 	long err = krbconn_modify(ctx, princ, mask);
-	krbconn_free_principal(princ);
+
 	free(princ);
 	free(princ_name);
 
