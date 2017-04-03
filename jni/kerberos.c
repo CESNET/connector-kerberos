@@ -26,6 +26,9 @@ char *krbconn_error(krbconn_context_t *ctx, long code) {
 			case KADM5_BAD_CLIENT_PARAMS:
 				asprintf(&text, "Kerberos error %ld: missing credentials", code);
 				break;
+			case KRB5_KT_NOTFOUND:
+				asprintf(&text, "Kerberos error %ld: specified principal not found in keytab", code);
+				break;
 			default:
 				asprintf(&text, "Kerberos error %ld: (no details)", code);
 				break;
@@ -318,6 +321,60 @@ void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jc
 }
 
 
+/**
+ * Select appropriate framework exception class and throw connector exception.
+ */
+jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
+	const char *exception;
+	char *errMsg;
+	jint retval;
+
+	switch (code) {
+		case KADM5_AUTH_GET:
+		case KADM5_AUTH_ADD:
+		case KADM5_AUTH_MODIFY:
+		case KADM5_AUTH_DELETE:
+		case KADM5_AUTH_INSUFFICIENT:
+		case KADM5_AUTH_LIST:
+		case KADM5_AUTH_CHANGEPW:
+		case KADM5_AUTH_SETKEY:
+		case KADM5_AUTH_EXTRACT:
+			exception = "org/identityconnectors/framework/common/exceptions/PermissionDeniedException";
+			break;
+		case KADM5_BAD_PASSWORD:
+			exception = "org/identityconnectors/framework/common/exceptions/InvalidPasswordException";
+			break;
+		case KADM5_GSS_ERROR:
+		case KADM5_PASS_REUSE:
+			exception = "org/identityconnectors/framework/common/exceptions/ConnectorSecurityException";
+			break;
+		case KADM5_PASS_TOOSOON:
+			exception = "org/identityconnectors/framework/common/exceptions/RetryableException";
+			break;
+		case KADM5_BAD_MASK:
+		case KADM5_BAD_CLASS:
+		case KADM5_BAD_LENGTH:
+		case KADM5_BAD_POLICY:
+		case KADM5_BAD_PRINCIPAL:
+		case KADM5_BAD_AUX_ATTR:
+		case KADM5_BAD_MIN_PASS_LIFE:
+			exception = "org/identityconnectors/framework/common/exceptions/InvalidAttributeValueException";
+			break;
+		case KADM5_MISSING_CONF_PARAMS:
+			exception = "org/identityconnectors/framework/common/exceptions/ConfigurationException";
+			break;
+		default:
+			exception = "cz/zcu/exceptions/KerberosException";
+	}
+
+	errMsg = krbconn_error(ctx, code);
+	retval = throwGenericException(env, exception, errMsg);
+	free(errMsg);
+
+	return retval;
+}
+
+
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = calloc(sizeof(krbconn_context_t), 1);
 	krbconn_config_t conf;
@@ -337,9 +394,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 	//Initialize context
 	long code;
 	if ((code = krbconn_init(ctx, &conf)) != 0) {
-		err = krbconn_error(ctx, code);
-		throwKerberosException(env, err);
-		free(err);
+		throwKerberosException(env, ctx, code);
 		return;
 	}
 
@@ -386,9 +441,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 
 	long code;
 	if ((code = krbconn_renew(ctx, &conf)) != 0) {
-		char* err = krbconn_error(ctx, code);
-		throwKerberosException(env, err);
-		free(err);
+		throwKerberosException(env, ctx, code);
 		return;
 	}
 
@@ -438,10 +491,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 	free(princ);
 
 	if (err != 0) {
-		char* errMsg = krbconn_error(ctx, err);
-        throwKerberosException(env, errMsg);
-		free(errMsg);
-        return;
+		throwKerberosException(env, ctx, err);
+		return;
 	}
 }
 
@@ -460,11 +511,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 	long err = krbconn_delete(ctx, str);
 	free(str);
 
-	if (err != 0) {
-		char* errMsg = krbconn_error(ctx, err);
-		throwKerberosException(env, errMsg);
-		free(errMsg);
-	}
+	if (err != 0)
+		throwKerberosException(env, ctx, err);
 }
 
 JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query,
@@ -550,11 +598,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, j
 	free(princ_new_name);
 	free(princ_old_name);
 
-	if (err != 0) {
-		char* errMsg = krbconn_error(ctx, err);
-		throwKerberosException(env, errMsg);
-		free(errMsg);
-	}
+	if (err != 0)
+		throwKerberosException(env, ctx, err);
 }
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env, jobject this, jstring name, jstring password) {
@@ -575,11 +620,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env,
 	free(princ_name);
 	free(princ_pass);
 
-	if (err != 0) {
-		char* errMsg = krbconn_error(ctx, err);
-		throwKerberosException(env, errMsg);
-		free(errMsg);
-	}
+	if (err != 0)
+		throwKerberosException(env, ctx, err);
 }
 
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, jobject this, jstring name,
@@ -620,9 +662,6 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, j
 	free(princ);
 	free(princ_name);
 
-	if (err != 0) {
-		char* errMsg = krbconn_error(ctx, err);
-		throwKerberosException(env, errMsg);
-		free(errMsg);
-	}
+	if (err != 0)
+		throwKerberosException(env, ctx, err);
 }
