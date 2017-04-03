@@ -338,7 +338,9 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 		case KADM5_AUTH_LIST:
 		case KADM5_AUTH_CHANGEPW:
 		case KADM5_AUTH_SETKEY:
+#ifdef KADM5_AUTH_EXTRACT
 		case KADM5_AUTH_EXTRACT:
+#endif
 			exception = "org/identityconnectors/framework/common/exceptions/PermissionDeniedException";
 			break;
 		case KADM5_BAD_PASSWORD:
