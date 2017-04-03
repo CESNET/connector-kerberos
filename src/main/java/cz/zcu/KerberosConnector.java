@@ -7,12 +7,13 @@ import java.util.Set;
 import cz.zcu.exceptions.KerberosException;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.operations.*;
@@ -23,7 +24,7 @@ import org.identityconnectors.framework.spi.operations.*;
 @ConnectorClass(
 		displayNameKey = "Kerberos.connector.display",
 		configurationClass = KerberosConfiguration.class)
-public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchOp<String>, UpdateOp, SchemaOp, TestOp {
+public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp, SearchOp<String>, UpdateOp, SchemaOp, TestOp {
 
 	/**
 	 * Setup logging for the {@link KerberosConnector}.
@@ -74,6 +75,19 @@ public class KerberosConnector implements Connector, CreateOp, DeleteOp, SearchO
 		logger.info("Disposing resource");
 		krb5_destroy();
 		configuration = null;
+	}
+
+	/**
+	 * Check the instance connection of {@link KerberosConnectr} to be reused.
+	 *
+	 * It only check, if the connection has not been disposed. Otherwise always OK.
+	 *
+	 * @see org.identityconnectors.framework.spi.PoolableConnector#checkAlive()
+	 */
+	public void checkAlive() {
+		if (configuration == null) {
+			throw new ConnectorException("checkAlive(): Connector not initialized");
+		}
 	}
 
 	private native void krb5_init(Class<GuardedStringAccessor> gsAccessor) throws KerberosException;
