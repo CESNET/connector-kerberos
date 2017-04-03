@@ -76,10 +76,10 @@ The native library (non-JNI part) can be checked using provided test example *kr
 
 Update is translated to the proper rename, change password, or modify Kadm5 library calls on the Kerberos principal.
 
-Note, the Kerberos principal flags are represented in schema using particular flag attributes and also by integer mask *attributes*. Also enable/disable is represented by *allowTix*. If any combination of values is used during modification:
+Note, the Kerberos principal flags are represented in schema using particular flag attributes and also by integer mask *attributes*. Also enable/disable is represented by *allowTix* flag. If any combination of values is used during modification:
 
-* particular flag attributes has precedence before *attributes*
-* enable/disable state has precedence before *allowTix*
+* particular flag attributes has precedence over *attributes*
+* enable/disable state has precedence over *allowTix*
 
 #### Paged Search
 
@@ -94,6 +94,21 @@ Test will perform new login with configured credentials.
 #### Auxiliary object classes
 
 #### Live sync
+
+## Troubleshooing
+
+### PermissionDeniedException with "Kerberos error NUMBER: (no details)" message
+
+Due to limitation of MIT Kadm5 library, it is harder to get user-friendly error messages during initial admin login into Kerberos. Typical exception may look like this:
+
+<tt>org.identityconnectors.framework.common.exceptions.PermissionDeniedException(Kerberos error -1765328203: (no details))</tt>
+
+There are error codes in headers from MIT Kerberos 5:
+
+* **/usr/include/krb5.h**
+* **/usr/include/kadm5/kadm5\_err.h**
+
+You may need to check Kerberos connector configuration parameters or keytab file owner/permissions.
 
 ## Developer's Corner
 
