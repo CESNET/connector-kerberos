@@ -440,10 +440,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 	(*env)->DeleteLocalRef(env, config);
 
 	long code;
-	if ((code = krbconn_renew(ctx, &conf)) != 0) {
+	if ((code = krbconn_renew(ctx, &conf)) != 0)
 		throwKerberosException(env, ctx, code);
-		return;
-	}
 
 	krbconn_free_config(&conf);
 }
@@ -490,7 +488,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 	krbconn_free_principal(princ);
 	free(princ);
 
-	if (err != 0) {
+	if (err) {
 		throwKerberosException(env, ctx, err);
 		return;
 	}
@@ -511,7 +509,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 	long err = krbconn_delete(ctx, str);
 	free(str);
 
-	if (err != 0)
+	if (err)
 		throwKerberosException(env, ctx, err);
 }
 
@@ -528,8 +526,12 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	char** list;
 	int count;
-	krbconn_list(ctx, cQuery, &list, &count);
+	long err = krbconn_list(ctx, cQuery, &list, &count);
 	free(cQuery);
+	if (err) {
+		throwKerberosException(env, ctx, err);
+		return 0;
+	}
 
 	int trueCount = count;
 	if (count - pageOffset < pageSize) {
@@ -551,6 +553,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
 
+	// TODO: check errors from kerbconn_get, probably return them in KerberosSearchResults
 	for (int i = pageOffset; i < pageOffset + trueCount; i++) {
 		krbconn_principal_t princ;
 		memset(&princ, 0, sizeof(princ));
@@ -598,7 +601,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, j
 	free(princ_new_name);
 	free(princ_old_name);
 
-	if (err != 0)
+	if (err)
 		throwKerberosException(env, ctx, err);
 }
 
@@ -620,7 +623,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env,
 	free(princ_name);
 	free(princ_pass);
 
-	if (err != 0)
+	if (err)
 		throwKerberosException(env, ctx, err);
 }
 
@@ -662,6 +665,6 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, j
 	free(princ);
 	free(princ_name);
 
-	if (err != 0)
+	if (err)
 		throwKerberosException(env, ctx, err);
 }
