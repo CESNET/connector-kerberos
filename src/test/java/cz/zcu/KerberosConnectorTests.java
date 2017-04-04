@@ -121,8 +121,8 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
-	public void searchTest() {
-		logger.info("Running Search Test");
+	public void exactSearchTest() {
+		logger.info("Running Exact Search Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		builder.setPageSize(10);
@@ -130,6 +130,51 @@ public class KerberosConnectorTests {
 
 		SearchResult result =
 				facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2")), handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
+	}
+
+	@Test
+	public void startsWithSearchTest() {
+		logger.info("Running \"Starts with\" Search Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		final ResultsHandler handler = new ToListResultsHandler();
+
+		SearchResult result =
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(new Name("user")), handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 3);
+	}
+
+	@Test
+	public void endsWithSearchTest() {
+		logger.info("Running \"Ends with\" Search Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		final ResultsHandler handler = new ToListResultsHandler();
+
+		SearchResult result =
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("2")), handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
+	}
+
+	@Test
+	public void containsSearchTest() {
+		logger.info("Running \"Contains\" Search Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		final ResultsHandler handler = new ToListResultsHandler();
+
+		SearchResult result =
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.contains(new Name("ad")), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
