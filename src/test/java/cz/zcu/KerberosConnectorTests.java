@@ -37,190 +37,183 @@ import org.testng.annotations.Test;
  */
 public class KerberosConnectorTests {
 
-    /**
-    * Setup logging for the {@link KerberosConnectorTests}.
-    */
-    private static final Log logger = Log.getLog(KerberosConnectorTests.class);
+	/**
+	 * Setup logging for the {@link KerberosConnectorTests}.
+	 */
+	private static final Log logger = Log.getLog(KerberosConnectorTests.class);
 
-    private ConnectorFacade connectorFacade = null;
+	private ConnectorFacade connectorFacade = null;
 
-    /*
-    * Example test properties.
-    * See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
-    */
-    private static final PropertyBag PROPERTIES = TestHelpers.getProperties(KerberosConnector.class);
+	/*
+	* Example test properties.
+	* See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
+	*/
+	private static final PropertyBag PROPERTIES = TestHelpers.getProperties(KerberosConnector.class);
 
-    @BeforeClass
-    public void setUp() {
-        //
-        //other setup work to do before running tests
-        //
+	@BeforeClass
+	public void setUp() {
+		//
+		//other setup work to do before running tests
+		//
 
-        //Configuration config = new KerberosConfiguration();
-        //Map<String, ? extends Object> configData = (Map<String, ? extends Object>) PROPERTIES.getProperty("configuration",Map.class)
-        //TestHelpers.fillConfiguration(
-        //System.out.println("configuration" + PROPERTIES);
-    }
+		//Configuration config = new KerberosConfiguration();
+		//Map<String, ? extends Object> configData = (Map<String, ? extends Object>) PROPERTIES.getProperty("configuration",Map.class)
+		//TestHelpers.fillConfiguration(
+		//System.out.println("configuration" + PROPERTIES);
+	}
 
-    @AfterClass
-    public void tearDown() {
-        //
-        // clean up resources
-        //
-        if (connectorFacade instanceof LocalConnectorFacadeImpl) {
-            ((LocalConnectorFacadeImpl) connectorFacade).dispose();
-        }
-    }
+	@AfterClass
+	public void tearDown() {
+		//
+		// clean up resources
+		//
+		if (connectorFacade instanceof LocalConnectorFacadeImpl) {
+			((LocalConnectorFacadeImpl) connectorFacade).dispose();
+		}
+	}
 
-    @Test
-    public void exampleTest1() {
-        logger.info("Running Test 1...");
-        //You can use TestHelpers to do some of the boilerplate work in running a search
-        //TestHelpers.search(theConnector, ObjectClass.ACCOUNT, filter, handler, null);
-    }
+	@Test
+	public void exampleTest1() {
+		logger.info("Running Test 1...");
+		//You can use TestHelpers to do some of the boilerplate work in running a search
+		//TestHelpers.search(theConnector, ObjectClass.ACCOUNT, filter, handler, null);
+	}
 
-    @Test
-    public void exampleTest2() {
-        logger.info("Running Test 2...");
-        //Another example using TestHelpers
-        //List<ConnectorObject> results = TestHelpers.searchToList(theConnector, ObjectClass.GROUP, filter);
-    }
+	@Test
+	public void exampleTest2() {
+		logger.info("Running Test 2...");
+		//Another example using TestHelpers
+		//List<ConnectorObject> results = TestHelpers.searchToList(theConnector, ObjectClass.GROUP, filter);
+	}
 
+	@Test
+	public void createTest() {
+		logger.info("Running Create Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		Set<Attribute> createAttributes = new HashSet<Attribute>();
+		createAttributes.add(new Name("Foo"));
+		createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
+		createAttributes.add(AttributeBuilder.buildEnabled(true));
+		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, builder.build());
+		Assert.assertEquals(uid.getUidValue(), "foo");
+	}
 
-    @Test
-    public void createTest() {
-        logger.info("Running Create Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        Set<Attribute> createAttributes = new HashSet<Attribute>();
-        createAttributes.add(new Name("Foo"));
-        createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
-        createAttributes.add(AttributeBuilder.buildEnabled(true));
-        Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, builder.build());
-        Assert.assertEquals(uid.getUidValue(), "foo");
-    }
+	@Test
+	public void deleteTest() {
+		logger.info("Running Delete Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		facade.delete(ObjectClass.ACCOUNT, new Uid("user3"), builder.build());
+	}
 
-    @Test
-    public void deleteTest() {
-        logger.info("Running Delete Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        facade.delete(ObjectClass.ACCOUNT, new Uid("user3"), builder.build());
-    }
+	@Test
+	public void getObjectTest() {
+		logger.info("Running GetObject Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setAttributesToGet(Name.NAME);
+		ConnectorObject co =
+				facade.getObject(ObjectClass.ACCOUNT, new Uid(
+						"user2"), builder.build());
+		Assert.assertNotNull(co);
+		Assert.assertEquals(co.getName().getNameValue(), "user2");
+	}
 
+	@Test
+	public void searchTest() {
+		logger.info("Running Search Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		final ResultsHandler handler = new ToListResultsHandler();
 
+		SearchResult result =
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2")), handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
+	}
 
-
-
-    @Test
-    public void getObjectTest() {
-        logger.info("Running GetObject Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setAttributesToGet(Name.NAME);
-        ConnectorObject co =
-                facade.getObject(ObjectClass.ACCOUNT, new Uid(
-                        "user2"), builder.build());
-        Assert.assertNotNull(co);
-        Assert.assertEquals(co.getName().getNameValue(), "user2");
-    }
-
-    @Test
-    public void searchTest() {
-        logger.info("Running Search Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setPageSize(10);
-        final ResultsHandler handler = new ToListResultsHandler();
-
-        SearchResult result =
-                facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name("user2")), handler,
-                        builder.build());
-        Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
-        Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
-    }
-
-
-    @Test
+	@Test
 	/**
 	 * Test search with empty filter.
 	 */
-    public void searchAllTest() {
-        logger.info("Running Search All Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        builder.setPageSize(10);
-        final ResultsHandler handler = new ToListResultsHandler();
+	public void searchAllTest() {
+		logger.info("Running Search All Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		final ResultsHandler handler = new ToListResultsHandler();
 
-        SearchResult result =
-                facade.search(ObjectClass.ACCOUNT, null, handler,
-                        builder.build());
-        Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
-        Assert.assertTrue(((ToListResultsHandler) handler).getObjects().size() > 1);
-    }
+		SearchResult result =
+				facade.search(ObjectClass.ACCOUNT, null, handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertTrue(((ToListResultsHandler) handler).getObjects().size() > 1);
+	}
+
+	@Test
+	public void testTest() {
+		logger.info("Running Test Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		facade.test();
+	}
+
+	@Test
+	public void validateTest() {
+		logger.info("Running Validate Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		facade.validate();
+	}
+
+	@Test
+	public void updateTest() {
+		logger.info("Running Update Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		Set<Attribute> updateAttributes = new HashSet<Attribute>();
+		updateAttributes.add(new Name("user-new"));
+
+		Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("user"), updateAttributes, builder.build());
+		Assert.assertEquals(uid.getUidValue(), "user-new");
+	}
 
 
-    @Test
-    public void testTest() {
-        logger.info("Running Test Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        facade.test();
-    }
+	protected ConnectorFacade getFacade(KerberosConfiguration config) {
+		ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
+		// **test only**
+		APIConfiguration impl = TestHelpers.createTestConfiguration(KerberosConnector.class, config);
+		return factory.newInstance(impl);
+	}
 
-    @Test
-    public void validateTest() {
-        logger.info("Running Validate Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        facade.validate();
-    }
+	protected ConnectorFacade getFacade(Class<? extends Connector> clazz, String environment) {
+		if (null == connectorFacade) {
+			synchronized (this) {
+				if (null == connectorFacade) {
+					connectorFacade = createConnectorFacade(clazz, environment);
+				}
+			}
+		}
+		return connectorFacade;
+	}
 
-    @Test
-    public void updateTest() {
-        logger.info("Running Update Test");
-        final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-        final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-        Set<Attribute> updateAttributes = new HashSet<Attribute>();
-        updateAttributes.add(new Name("user-new"));
+	public ConnectorFacade createConnectorFacade(Class<? extends Connector> clazz,
+	                                             String environment) {
+		PropertyBag propertyBag = TestHelpers.getProperties(clazz, environment);
 
-        Uid uid = facade.update(ObjectClass.ACCOUNT, new Uid("user"), updateAttributes, builder.build());
-        Assert.assertEquals(uid.getUidValue(), "user-new");
-    }
+		APIConfiguration impl =
+				TestHelpers.createTestConfiguration(clazz, propertyBag, "configuration");
+		impl.setProducerBufferSize(0);
+		impl.getResultsHandlerConfiguration().setEnableAttributesToGetSearchResultsHandler(false);
+		impl.getResultsHandlerConfiguration().setEnableCaseInsensitiveFilter(false);
+		impl.getResultsHandlerConfiguration().setEnableFilteredResultsHandler(false);
+		impl.getResultsHandlerConfiguration().setEnableNormalizingResultsHandler(false);
 
+		//impl.setTimeout(CreateApiOp.class, 25000);
+		//impl.setTimeout(UpdateApiOp.class, 25000);
+		//impl.setTimeout(DeleteApiOp.class, 25000);
 
-    protected ConnectorFacade getFacade(KerberosConfiguration config) {
-        ConnectorFacadeFactory factory = ConnectorFacadeFactory.getInstance();
-        // **test only**
-        APIConfiguration impl = TestHelpers.createTestConfiguration(KerberosConnector.class, config);
-        return factory.newInstance(impl);
-    }
-
-    protected ConnectorFacade getFacade(Class<? extends Connector> clazz, String environment) {
-        if (null == connectorFacade) {
-            synchronized (this) {
-                if (null == connectorFacade) {
-                    connectorFacade = createConnectorFacade(clazz, environment);
-                }
-            }
-        }
-        return connectorFacade;
-    }
-
-    public ConnectorFacade createConnectorFacade(Class<? extends Connector> clazz,
-        String environment) {
-        PropertyBag propertyBag = TestHelpers.getProperties(clazz, environment);
-
-        APIConfiguration impl =
-            TestHelpers.createTestConfiguration(clazz, propertyBag, "configuration");
-        impl.setProducerBufferSize(0);
-        impl.getResultsHandlerConfiguration().setEnableAttributesToGetSearchResultsHandler(false);
-        impl.getResultsHandlerConfiguration().setEnableCaseInsensitiveFilter(false);
-        impl.getResultsHandlerConfiguration().setEnableFilteredResultsHandler(false);
-        impl.getResultsHandlerConfiguration().setEnableNormalizingResultsHandler(false);
-
-        //impl.setTimeout(CreateApiOp.class, 25000);
-        //impl.setTimeout(UpdateApiOp.class, 25000);
-        //impl.setTimeout(DeleteApiOp.class, 25000);
-
-        return ConnectorFacadeFactory.getInstance().newInstance(impl);
-    }
+		return ConnectorFacadeFactory.getInstance().newInstance(impl);
+	}
 }
