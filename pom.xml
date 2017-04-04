@@ -100,15 +100,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.eluder.coveralls</groupId>
-				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>4.3.0</version>
-				<configuration>
-					<dryRun>true</dryRun>
-					<coverallsFile>${project.build.directory}/coverage.java.json</coverallsFile>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.7.9</version>
@@ -121,7 +112,7 @@
 					</execution>
 					<execution>
 						<id>default-report</id>
-						<phase>prepare-package</phase>
+						<phase>test</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
@@ -130,6 +121,24 @@
 						<id>default-check</id>
 						<goals>
 							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>4.3.0</version>
+				<configuration>
+					<dryRun>true</dryRun>
+					<coverallsFile>${project.build.directory}/coverage.java.json</coverallsFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>save-report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
 						</goals>
 					</execution>
 				</executions>
