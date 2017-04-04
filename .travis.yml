@@ -8,7 +8,17 @@ addons:
     packages:
       cmake
       libkrb5-dev
+      lcov
 
 # libkadm5 >= 1.15 not required - fake library used in tests
 before_install:
   - sed -e '/KRB5_VERSION VERSION_LESS/,+2d' -i jni/CMakeLists.txt
+
+install:
+  - pip install coveralls nose coveralls-merge
+  - gem install coveralls-lcov
+
+after_success:
+  - lcov -c -d target/CMakeFiles/kerberos-connector.dir -b target/CMakeFiles/kerberos-connector.dir --output-file target/lcov.info
+  - coveralls-lcov -v -n target/lcov.info > target/coverage.c.json
+  - coveralls-merge target/coverage.c.json target/coverage.java.json
