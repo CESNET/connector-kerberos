@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <fnmatch.h>
 
 #include <kadm5/admin.h>
 
@@ -415,7 +416,7 @@ kadm5_ret_t kadm5_rename_principal(
 /**
  * Get available principals.
  *
- * Query expression is handled only using plain string compare.
+ * Query expression is handled by fnmatch.
  */
 kadm5_ret_t kadm5_get_principals(
 	void *server_handle,
@@ -437,7 +438,7 @@ kadm5_ret_t kadm5_get_principals(
 			free(*princs);
 			return err;
 		}
-		if (!exp || (strcmp(exp, name) == 0)) {
+		if (!exp || (fnmatch(exp, name, 0) == 0)) {
 			(*princs)[j++] = name;
 		}
 	}
