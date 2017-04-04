@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 2.8.12)
 include(cmake/EnableCompilerFlag.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 project(kerberos-connector C)
@@ -25,12 +25,24 @@ target_link_libraries(kerberos-connector ${KRB5_LIBRARIES} ${JAVA_JVM_LIBRARY})
 set(TARGETS kerberos-connector)
 
 set(TEST 0 CACHE BOOL "Create test tools")
+set(COVERAGE 0 CACHE BOOL "Enable coverage testing compilfer flags")
+
 if(${TEST})
 	add_executable(krbconn_test krbconn_test.c)
 	add_library(kadm5_fake SHARED kadm5_fake.c)
 	target_include_directories(kadm5_fake PRIVATE ${KRB5_INCLUDE_DIRS})
 	target_link_libraries(krbconn_test kerberos-connector)
 	list(APPEND TARGETS krbconn_test kadm5_fake)
+
+endif()
+
+if(${COVERAGE})
+	if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+		message(FATAL_ERROR "Coverage testing requires Debug build")
+	endif()
+
+	target_compile_options(kerberos-connector PRIVATE --coverage)
+	target_link_libraries(kerberos-connector --coverage)
 endif()
 
 install(TARGETS ${TARGETS}
