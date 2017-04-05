@@ -104,7 +104,7 @@ public class KerberosConnectorTests {
 		logger.info("Running Delete Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-		facade.delete(ObjectClass.ACCOUNT, new Uid("user3"), builder.build());
+		facade.delete(ObjectClass.ACCOUNT, new Uid("test"), builder.build());
 	}
 
 	@Test
