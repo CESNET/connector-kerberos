@@ -29,7 +29,7 @@ Unit-tests are launched using locally compiled JNI library and fake libkrb5+libk
 
 ### Build JNI library
 
-JNI library needs to be compiled for the used runtime environment.
+JNI library needs to be compiled for the used runtime environment (midPoint server).
 
 Steps:
 
@@ -131,3 +131,14 @@ You may need to check Kerberos connector configuration parameters or keytab file
 ### Launch specific test
 
     mvn surefire:test -Dtest=cz.zcu.KerberosConnectorTests#createTest
+
+### Fake Kadm5 library
+
+Mock implementation of the Krb5 and Kadm5 libraries with function used by the JNI part. Data are dynamic, kept in the memory, and initial principals are read from the csv file.
+
+Used config environment variables:
+
+* *FAKE\_KADM5\_DATA*: data file with read-only initial data (default: *target/test-classes/data.csv*)
+* *FAKE\_KADM5\_REALM*: emulated realm (default: *EXAMPLE.COM*)
+
+The library is preloaded for unit-tests using *LD\_PRELOAD*.

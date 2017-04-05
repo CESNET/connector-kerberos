@@ -95,6 +95,7 @@
 				<configuration>
 					<argLine>${argLine} -Djava.library.path=${project.build.directory}</argLine>
 					<environmentVariables>
+						<FAKE_KADM5_DATA>${project.build.directory}/test-classes/data.csv</FAKE_KADM5_DATA>
 						<LD_PRELOAD>${project.build.directory}/libkadm5_fake.so</LD_PRELOAD>
 					</environmentVariables>
 				</configuration>

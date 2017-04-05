@@ -1,0 +1,6 @@
+name,password,policy,attributes,modifyPrincipal,modifyDate
+admin,password,default,128,,0
+user,p1,default,128,admin,1483225200
+user2,p2,default,128,admin,1483225200
+user3,p3,default,128,admin,1483225200
+host/pokuston,2JvxZTi0ywVHhPv2,default_nohistory,128,admin,1483225200

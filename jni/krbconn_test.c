@@ -7,7 +7,7 @@
 #include "kerberos.h"
 
 
-#define DEFAULT_PRINCIPAL "host/pokuston.civ.zcu.cz"
+#define DEFAULT_PRINCIPAL "host/pokuston"
 
 
 void usage(const char *name) {
@@ -25,6 +25,7 @@ COMMAND:\n\
   delete [PRINCIPAL]\n\
   list [QUERY]\n\
   modify [PRINCIPAL] [POLICY]\n\
+  rename PRINCIPAL NEW_PRINCIPAL\n\
   cpw PRINCIPAL PASSWORD\n\
   error CODE\n\
   renew [PRINCIPAL]\n\
@@ -176,6 +177,26 @@ int main(int argc, char **argv) {
 			goto end;
 		}
 		printf("%s modified\n", principal.name);
+	} else if (strcmp(command, "rename") == 0) {
+		char *new_name;
+
+		if (optind + 2 < argc) {
+			printf("Principal names required for 'rename' command\n");
+			code = 1;
+			goto end;
+		}
+		name = argv[optind++];
+		new_name = argv[optind++];
+
+		printf("Old name:        %s\n", name);
+		printf("New name:        %s\n", new_name);
+		if ((code = krbconn_rename(&ctx, name, new_name))) {
+			err = krbconn_error(&ctx, code);
+			printf("%s\n", err);
+			free(err);
+			goto end;
+		}
+		printf("%s renamed to %s\n", name, new_name);
 	} else if (strcmp(command, "cpw") == 0) {
 		if (optind < argc) {
 			name = argv[optind++];
