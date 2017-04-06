@@ -365,6 +365,9 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 		case KADM5_MISSING_CONF_PARAMS:
 			exception = "org/identityconnectors/framework/common/exceptions/ConfigurationException";
 			break;
+		case KADM5_RPC_ERROR:
+			exception = "org/identityconnectors/framework/common/exceptions/ConnectionBrokenException";
+			break;
 		default:
 			exception = "cz/zcu/exceptions/KerberosException";
 	}
