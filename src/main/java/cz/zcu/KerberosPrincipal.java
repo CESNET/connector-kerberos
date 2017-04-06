@@ -79,14 +79,14 @@ public class KerberosPrincipal {
 		builder.setName(name);
 		builder.addAttribute(OperationalAttributes.ENABLE_NAME, enabled());
 		if (pwdExpiry != 0)
-			builder.addAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, pwdExpiry);
+			builder.addAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, 1000 * pwdExpiry);
 		if (princExpiry != 0)
-			builder.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, princExpiry);
+			builder.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, 1000 * princExpiry);
 		if (pwdChange != 0)
-			builder.addAttribute("passwordChangeDate", pwdChange);
+			builder.addAttribute("passwordChangeDate", 1000 * pwdChange);
 		builder.addAttribute("modifyPrincipal", modifyPrincipal);
 		if (modifyDate != 0)
-			builder.addAttribute("modifyDate", modifyDate);
+			builder.addAttribute("modifyDate", 1000 * modifyDate);
 		builder.addAttribute("attributes", attributes.getAttributes());
 		builder.addAttribute("policy", policy);
 

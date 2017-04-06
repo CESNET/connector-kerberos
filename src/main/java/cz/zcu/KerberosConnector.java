@@ -258,12 +258,12 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			int mask = 0;
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.DISABLE_DATE_NAME)) {
-				principalExpiry = attributesAccessor.findLong(OperationalAttributes.DISABLE_DATE_NAME);
+				principalExpiry = attributesAccessor.findLong(OperationalAttributes.DISABLE_DATE_NAME) / 1000;
 				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
-				passwordExpiry = attributesAccessor.findLong(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME);
+				passwordExpiry = attributesAccessor.findLong(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME) / 1000;
 				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
 			}
 
