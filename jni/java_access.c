@@ -96,11 +96,15 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 }
 
 jint throwGenericException(JNIEnv* env, const char *exception, const char* message) {
-	static jclass kerbEx = NULL;
-	if (kerbEx == NULL) {
-		kerbEx = (*env)->FindClass(env, exception);
-		kerbEx = (*env)->NewGlobalRef(env, kerbEx);
-	}
+	jclass exClass;
 
-	return (*env)->ThrowNew(env, kerbEx, message);
+	exClass = (*env)->FindClass(env, exception);
+	if (exClass)
+		return (*env)->ThrowNew(env, exClass, message);
+
+	exClass = (*env)->FindClass(env, "java/lang/NoClassDefFoundError");
+	if (exClass)
+		return (*env)->ThrowNew(env, exClass, exception);
+
+	return 0;
 }
