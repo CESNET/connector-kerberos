@@ -4,9 +4,11 @@ Native Kerberos [Polygon+ConnId](https://wiki.evolveum.com/display/midPoint/Iden
 
 Tested with [midPoint](https://evolveum.com/) version 3.5.
 
+Sample configuration: [samples/kerberos.xml](samples/kerberos.xml).
+
 ## Status
 
-Basic functionality is there. Several important features are missing. Also as typical for JNI technology and heavy development, it may crash all applications running, or eat your home pets.
+Basic functionality is there. And as typical for JNI technology and heavy development, it may crash all applications running, or eat your home pets.
 
 The code is partially covered by unit-tests.
 
@@ -44,23 +46,28 @@ The native library (non-JNI part) can be checked using provided test example *kr
 
 ## Attributes
 
-* **name** (string): principal name (without the realm suffix)
-* **UID** (string, read-only): the same as **name**
+Operational attributes:
+
+* **name** (NAME): principal name (without the realm suffix)
+* **UID** (UID, read-only): the same as **name**
+* **administrativeStatus** (ENABLE): true if enabled, mapped also to **attributes** and **allowTix**
+* **validTo** (DISABLE\_DATE)
+* **password** (PASSWORD)
+* **passwordExpirationDate** (PASSWORD\_EXPIRATION\_DATE)
+
+Attributes:
+
+* **passwordChangeDate** (long)
 * **attributes** (int): all Kerberos principal flags as integer mask
 * **policy** (string)
-* administrative status (ENABLE operational): true if enabled, mapped also to **attributes** and **allowTix**
-* (DISABLE\_DATE operational)
-* (PASSWORD operational)
-* **passwordExpirationDate** (PASSWORD\_EXPIRATION\_DATE operational)
-* **passwordChangeDate**
-* **modifyPrincipal**
-* **modifyDate**
-* **allowTix**: Kerberos principal flag, mapped also to **attributes** and administrative status
-* **allowForwardable**: Kerberos principal flag, mapped also to **attributes**
-* **allowRenewable**: Kerberos principal flag, mapped also to **attributes**
-* **requiresPreauth**: Kerberos principal flag, mapped also to **attributes**
-* **requiresHwauth**: Kerberos principal flag, mapped also to **attributes**
-* **requiresPwchange**: Kerberos principal flag, mapped also to **attributes**
+* **modifyPrincipal** (string)
+* **modifyDate** (long)
+* **allowTix** (boolean): Kerberos principal flag, mapped also to **attributes** and administrative status
+* **allowForwardable** (boolean): Kerberos principal flag, mapped also to **attributes**
+* **allowRenewable** (boolean): Kerberos principal flag, mapped also to **attributes**
+* **requiresPreauth** (boolean): Kerberos principal flag, mapped also to **attributes**
+* **requiresHwauth** (boolean): Kerberos principal flag, mapped also to **attributes**
+* **requiresPwchange** (boolean): Kerberos principal flag, mapped also to **attributes**
 
 ## Capabilities
 
@@ -105,8 +112,8 @@ Due to limitation of MIT Kadm5 library, it is harder to get user-friendly error 
 
 There are error codes in headers from MIT Kerberos 5:
 
-* **/usr/include/krb5.h**
-* **/usr/include/kadm5/kadm5\_err.h**
+* */usr/include/krb5.h*
+* */usr/include/kadm5/kadm5\_err.h*
 
 You may need to check Kerberos connector configuration parameters or keytab file owner/permissions.
 

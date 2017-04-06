@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+          xmlns:q="http://prism.evolveum.com/xml/ns/public/query-3"
+          xmlns:c="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+          xmlns:t="http://prism.evolveum.com/xml/ns/public/types-3"
+          xmlns:icfs="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3"
+          xmlns:ri="http://midpoint.evolveum.com/xml/ns/public/resource/instance-3">
+
+   <name>Kerberos</name>
+
+   <connectorRef type="c:ConnectorType">
+      <filter>
+         <q:equal>
+            <q:path>c:connectorType</q:path>
+            <q:value>cz.zcu.KerberosConnector</q:value>
+         </q:equal>
+      </filter>
+   </connectorRef>
+
+   <connectorConfiguration xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/connector-schema-3">
+      <!--
+        Example of connection pool configuration:
+          * connection timeout 2 hours
+          * no more than 10 active connections
+       -->
+      <icfc:connectorPoolConfiguration>
+         <icfc:minEvictableIdleTimeMillis>7200000</icfc:minEvictableIdleTimeMillis>
+         <icfc:minIdle>0</icfc:minIdle>
+         <icfc:maxIdle>2</icfc:maxIdle>
+         <icfc:maxObjects>10</icfc:maxObjects>
+         <icfc:maxWait>10</icfc:maxWait>
+      </icfc:connectorPoolConfiguration>
+      <!-- for paging support -->
+      <icfc:resultsHandlerConfiguration>
+         <icfc:enableFilteredResultsHandler>false</icfc:enableFilteredResultsHandler>
+      </icfc:resultsHandlerConfiguration>
+      <!-- fill in the proper values -->
+      <icfc:configurationProperties xmlns:krbconn="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/cz.zcu.kerberos-connector/cz.zcu.KerberosConnector">
+         <krbconn:realm>$(kerberosRealm)</krbconn:realm>
+         <krbconn:principal>$(kerberosPrincipal)</krbconn:principal>
+         <krbconn:keytab>$(kerberosKeytab)</krbconn:keytab>
+         <krbconn:lifeTime>$(kerberosLifeTime)</krbconn:lifeTime>
+      </icfc:configurationProperties>
+   </connectorConfiguration>
+
+   <schemaHandling>
+      <objectType>
+         <kind>account</kind>
+         <default>true</default>
+         <objectClass>ri:AccountObjectClass</objectClass>
+         <attribute>
+            <c:ref>icfs:name</c:ref>
+            <outbound>
+               <source>
+                  <c:path>$user/name</c:path>
+               </source>
+            </outbound>
+         </attribute>
+         <activation>
+            <administrativeStatus>
+               <outbound/>
+            </administrativeStatus>
+            <validTo>
+               <outbound/>
+            </validTo>
+         </activation>
+         <credentials>
+            <password>
+               <outbound>
+                  <expression>
+                     <asIs/>
+                  </expression>
+               </outbound>
+            </password>
+         </credentials>
+      </objectType>
+   </schemaHandling>
+
+   <capabilities>
+      <configured xmlns:cap="http://midpoint.evolveum.com/xml/ns/public/resource/capabilities-3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="c:CapabilityCollectionType">
+         <!-- for paging support -->
+         <cap:pagedSearch/>
+         <!-- for paging support -->
+         <cap:countObjects>
+            <cap:simulate>pagedSearchEstimate</cap:simulate>
+         </cap:countObjects>
+      </configured>
+   </capabilities>
+
+   <synchronization>
+      <objectSynchronization>
+         <name>Kerberos Synchronization</name>
+         <objectClass>ri:AccountObjectClass</objectClass>
+         <kind>account</kind>
+         <focusType>c:UserType</focusType>
+         <enabled>true</enabled>
+         <correlation>
+            <q:description>correlation1_1</q:description>
+            <q:equal>
+               <q:path>c:name</q:path>
+               <expression>
+                  <path>declare namespace icfs='http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3'; $account/attributes/icfs:name</path>
+               </expression>
+            </q:equal>
+         </correlation>
+         <reconcile>true</reconcile>
+         <reaction>
+            <situation>unlinked</situation>
+            <action>
+               <handlerUri>http://midpoint.evolveum.com/xml/ns/public/model/action-3#link</handlerUri>
+            </action>
+         </reaction>
+      </objectSynchronization>
+   </synchronization>
+</resource>
