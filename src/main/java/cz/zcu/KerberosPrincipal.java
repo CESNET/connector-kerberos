@@ -65,6 +65,8 @@ public class KerberosPrincipal {
 
 	/**
 	 * Principal status.
+	 *
+	 * @return true, if enabled
 	 */
 	public boolean enabled() {
 		return attributes.hasAllowTix();

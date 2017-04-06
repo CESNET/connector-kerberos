@@ -59,7 +59,6 @@ public class KerberosFlags {
 	 *
 	 *  @param flag principal flag name
 	 *  @param value principal flag value
-	 *  @param originalAttributes original principal attributes
 	 */
 	public void setFlag(String flag, boolean value) throws KerberosException {
 		int mask;
@@ -110,7 +109,9 @@ public class KerberosFlags {
 	}
 
 	/**
-	 * Get "allow tix" flag.
+	 * Get "allow tix" flag
+	 *
+	 * @return allowTix flag
 	 */
 	public boolean hasAllowTix() {
 		return (attributes & KerberosFlags.KRB5_DISALLOW_ALL_TIX) == 0;
@@ -118,6 +119,8 @@ public class KerberosFlags {
 
 	/**
 	 * Get "allow forwardable" flag.
+	 *
+	 * @return allowForwardable flag
 	 */
 	public boolean hasAllowForwardable() {
 		return (attributes & KerberosFlags.KRB5_DISALLOW_FORWARDABLE) == 0;
@@ -125,6 +128,8 @@ public class KerberosFlags {
 
 	/**
 	 * Get "allow renewable" flag.
+	 *
+	 * @return allowRenewable flag
 	 */
 	public boolean hasAllowRenewable() {
 		return (attributes & KerberosFlags.KRB5_DISALLOW_RENEWABLE) == 0;
@@ -132,6 +137,8 @@ public class KerberosFlags {
 
 	/**
 	 * Get "requires preauth" flag.
+	 *
+	 * @return requiresPreauth flag
 	 */
 	public boolean hasRequiresPreauth() {
 		return (attributes & KerberosFlags.KRB5_REQUIRES_PREAUTH) != 0;
@@ -139,6 +146,8 @@ public class KerberosFlags {
 
 	/**
 	 * Get "requires hwauth" flag.
+	 *
+	 * @return requiresHwauth flag
 	 */
 	public boolean hasRequiresHwauth() {
 		return (attributes & KerberosFlags.KRB5_REQUIRES_HWAUTH) != 0;
@@ -146,6 +155,8 @@ public class KerberosFlags {
 
 	/**
 	 * Get "requires pwchange" flag.
+	 *
+	 * @return requiresPwchange flag
 	 */
 	public boolean hasRequiresPwchange() {
 		return (attributes & KerberosFlags.KRB5_REQUIRES_PWCHANGE) != 0;

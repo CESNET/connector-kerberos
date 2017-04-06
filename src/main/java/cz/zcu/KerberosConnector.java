@@ -78,7 +78,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	}
 
 	/**
-	 * Check the instance connection of {@link KerberosConnectr} to be reused.
+	 * Check the instance connection of {@link KerberosConnector} to be reused.
 	 *
 	 * It only check, if the connection has not been disposed. Otherwise always OK.
 	 *
