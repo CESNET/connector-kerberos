@@ -35,6 +35,11 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	private String keytab = null;
 
 	/**
+	 * Administrator credentials lifetime (ms).
+	 */
+	private int lifeTime = 2 * 3600 * 1000;
+
+	/**
 	 * Constructor.
 	 */
 	public KerberosConfiguration() {
@@ -83,6 +88,17 @@ public class KerberosConfiguration extends AbstractConfiguration {
 
 	public void setKeytab(String keytab) {
 		this.keytab = keytab;
+	}
+
+	@ConfigurationProperty(order = 5, displayMessageKey = "lifetime.display",
+		groupMessageKey = "basic.group", helpMessageKey = "lifetime.help",
+		required = true, confidential = false)
+	public int getLifeTime() {
+		return lifeTime;
+	}
+
+	public void setLifeTime(int lifetime) {
+		this.lifeTime = lifetime;
 	}
 
 	/**

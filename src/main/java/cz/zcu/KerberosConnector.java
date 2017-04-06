@@ -41,6 +41,14 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 
 	private long contextPointer;
 
+	/**
+	 * Last connection time.
+	 *
+	 * Used for checking credentials validity.
+	 */
+	private long lastLoginTime = 0;
+
+
 	public long getContextPointer() {
 		return this.contextPointer;
 	}
@@ -61,9 +69,12 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 * @see org.identityconnectors.framework.spi.Connector#init(org.identityconnectors.framework.spi.Configuration)
 	 */
 	public void init(final Configuration configuration) {
+		long currentTime = System.currentTimeMillis();
+
 		this.configuration = (KerberosConfiguration) configuration;
 		logger.info("Initializing resource with realm {0}", this.configuration.getRealm());
 		krb5_init(GuardedStringAccessor.class);
+		this.lastLoginTime = currentTime;
 	}
 
 	/**
@@ -75,6 +86,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 		logger.info("Disposing resource");
 		krb5_destroy();
 		configuration = null;
+		lastLoginTime = 0;
 	}
 
 	/**
@@ -87,6 +99,16 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	public void checkAlive() {
 		if (configuration == null) {
 			throw new ConnectorException("checkAlive(): Connector not initialized");
+		}
+		if (configuration.getLifeTime() == 0) {
+			throw new ConnectorException("checkAlive(): No connection re-use with credentials lifetime 0");
+		}
+
+		long currentTime = System.currentTimeMillis();
+		long sessionTime = currentTime - lastLoginTime;
+		if (sessionTime >= configuration.getLifeTime()) {
+			logger.info("Closing session, connection time: {} s, max time: {} s", sessionTime / 1000, configuration.getLifeTime() / 1000);
+			throw new ConnectorException("Credentials lifetime ended");
 		}
 	}
 
