@@ -56,6 +56,14 @@
                </source>
             </outbound>
          </attribute>
+         <attribute>
+            <c:ref>ri:policy</c:ref>
+            <outbound>
+               <expression>
+                  <value>default</value>
+               </expression>
+            </outbound>
+         </attribute>
          <activation>
             <administrativeStatus>
                <outbound/>
