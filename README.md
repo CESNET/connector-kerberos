@@ -137,7 +137,7 @@ You may need to check Kerberos connector configuration parameters or keytab file
 
 ### Launch specific test
 
-    mvn surefire:test -Dtest=cz.zcu.KerberosConnectorTests#createTest
+    mvn surefire:test -DargLine= -Dtest=cz.zcu.KerberosConnectorTests#createTest
 
 ### Fake Kadm5 library
 
