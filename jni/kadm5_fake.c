@@ -44,7 +44,11 @@ typedef struct _fake_kadm5_principal {
 	char *modification_name;
 	time_t modification;
 	time_t pw_expiration;
+	time_t pw_change;
 	time_t expiration;
+
+	time_t max_ticket_life;
+	time_t max_renewable_life;
 } _fake_kadm5_principal, *fake_kadm5_principal;
 
 typedef struct _krb5_context {
@@ -165,15 +169,21 @@ static int fill_record(krb5_context ctx, fake_kadm5_principal record, kadm5_prin
 		free(record->policy);
 		record->policy = NULL;
 	}
+	if ((mask & KADM5_PRINC_EXPIRE_TIME) != 0)
+		record->expiration = ent->princ_expire_time;
+	if ((mask & KADM5_PW_EXPIRATION) != 0)
+		record->pw_expiration = ent->pw_expiration;
+	if ((mask & KADM5_LAST_PWD_CHANGE) != 0)
+		record->pw_change = ent->last_pwd_change;
 	if ((mask & KADM5_ATTRIBUTES) != 0)
 		record->attributes = ent->attributes;
+	if ((mask & KADM5_MAX_LIFE) != 0)
+		record->max_ticket_life = ent->max_life;
+	if ((mask & KADM5_MAX_RLIFE) != 0)
+		record->max_renewable_life = ent->max_renewable_life;
 	free(record->modification_name);
 	record->modification_name = strdup(ctx->admin_name);
 	record->modification = time(NULL);
-	if ((mask & KADM5_PW_EXPIRATION) != 0)
-		record->pw_expiration = ent->pw_expiration;
-	if ((mask & KADM5_PRINC_EXPIRE_TIME) != 0)
-		record->expiration = ent->princ_expire_time;
 
 	return 0;
 }
@@ -309,6 +319,9 @@ static int db_get(krb5_context ctx, kadm5_principal_ent_t ent, krb5_const_princi
 	ent->attributes = record->attributes;
 	ent->policy = record->policy ? strdup(record->policy) : NULL;
 
+	ent->max_life = record->max_ticket_life;
+	ent->max_renewable_life = record->max_renewable_life;
+
 	UNLOCK(ctx);
 	return 0;
 }
@@ -324,7 +337,7 @@ static int db_put(krb5_context ctx, kadm5_principal_ent_t ent, long mask, const 
 
 	if (check_principal(ent->principal) != 0) return ERROR_BAD_DATA;
 	if ((mask & KADM5_PRINCIPAL) == 0) return ERROR_MISSING_PRINCIPAL;
-	mask |= (KADM5_PRINCIPAL | KADM5_POLICY | KADM5_ATTRIBUTES | KADM5_PW_EXPIRATION | KADM5_PRINC_EXPIRE_TIME);
+	mask |= (KADM5_PRINCIPAL | KADM5_POLICY | KADM5_ATTRIBUTES | KADM5_PW_EXPIRATION | KADM5_LAST_PWD_CHANGE | KADM5_PRINC_EXPIRE_TIME | KADM5_MAX_LIFE | KADM5_MAX_RLIFE);
 
 	LOCK(ctx);
 	i = fake_search(ctx, ent->principal);

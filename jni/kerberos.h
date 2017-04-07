@@ -16,7 +16,11 @@
 #define KRBCONN_PW_EXPIRATION     0x000004
 #define KRBCONN_LAST_PWD_CHANGE   0x000008
 #define KRBCONN_ATTRIBUTES        0x000010
+#define KRBCONN_MAX_LIFE          0x000020
 #define KRBCONN_POLICY            0x000800
+#define KRBCONN_MAX_RLIFE         0x002000
+#define KRBCONN_LAST_SUCCESS      0x004000
+#define KRBCONN_LAST_FAILED       0x008000
 
 
 typedef struct {
@@ -44,6 +48,11 @@ typedef struct {
 
 	int attributes;
 	char *policy;
+
+	time_t max_ticket_life;
+	time_t max_renewable_life;
+	time_t last_login;
+	time_t last_failed_login;
 } krbconn_principal_t;
 
 char *krbconn_error(krbconn_context_t *ctx, long code);

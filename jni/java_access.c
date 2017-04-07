@@ -76,7 +76,7 @@ krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_principal_t princ, jclass clazz) {
 	static jmethodID mid = NULL;
 	if (mid == NULL) {
-		mid = (*env)->GetMethodID(env, clazz, "<init>", "(Ljava/lang/String;JJJLjava/lang/String;JILjava/lang/String;)V");
+		mid = (*env)->GetMethodID(env, clazz, "<init>", SIGNATURE_KERBEROS_PRINCIPAL_INIT);
 	}
 
 	jstring name = (*env)->NewStringUTF(env, princ.name);
@@ -84,7 +84,7 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 	jstring policy = (*env)->NewStringUTF(env, princ.policy);
 
 	jobject jPrinc = (*env)->NewObject(env, clazz, mid, name, princ.princ_expire, princ.pwd_expire, princ.pwd_change,
-	                                   modifyPrincipal, princ.mod_date, princ.attributes, policy);
+	                                   modifyPrincipal, princ.mod_date, princ.attributes, policy, princ.max_ticket_life, princ.max_renewable_life, princ.last_login, princ.last_failed_login);
 
 	(*env)->DeleteLocalRef(env, name);
 	(*env)->DeleteLocalRef(env, modifyPrincipal);

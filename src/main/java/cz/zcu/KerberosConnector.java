@@ -115,11 +115,11 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	private native void krb5_init(Class<GuardedStringAccessor> gsAccessor) throws KerberosException;
 	private native void krb5_destroy();
 	private native void krb5_renew(Class<GuardedStringAccessor> gsAccessor) throws KerberosException;
-	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy, int mask) throws KerberosException;
+	private native void krb5_create(String name, String password, long principalExpiry, long passwordExpiry, int attributes, String policy, long maxTicketLife, long maxRenewableLife, int mask) throws KerberosException;
 	private native void krb5_delete(String name) throws KerberosException;
 	private native void krb5_rename(String name, String newName) throws KerberosException;
 	private native void krb5_chpasswd(String name, String password);
-	private native void krb5_modify(String name, long principalExpiry, long passwordExpiry, int attributes, String policy, int mask) throws KerberosException;
+	private native void krb5_modify(String name, long principalExpiry, long passwordExpiry, int attributes, String policy, long maxTicketLife, long maxRenewableLife, int mask) throws KerberosException;
 	private synchronized native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************
@@ -145,14 +145,14 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			tempAttr = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes);
 			long principalExpiry = 0;
 			if (tempAttr != null) {
-				principalExpiry = AttributeUtil.getLongValue(tempAttr);
+				principalExpiry = AttributeUtil.getLongValue(tempAttr) / 1000;
 				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
 			}
 
 			tempAttr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes);
 			long passwordExpiry = 0;
 			if (tempAttr != null) {
-				passwordExpiry = AttributeUtil.getLongValue(tempAttr);
+				passwordExpiry = AttributeUtil.getLongValue(tempAttr) / 1000;
 				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
 			}
 
@@ -170,14 +170,28 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 				mask |= KerberosPrincipal.KRBCONN_POLICY;
 			}
 
+			tempAttr = AttributeUtil.find("maxTicketLife", createAttributes);
+			long maxTicketLife = 0;
+			if (tempAttr != null) {
+				maxTicketLife = AttributeUtil.getLongValue(tempAttr) / 1000;
+				mask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
+			}
+
+			tempAttr = AttributeUtil.find("maxRenewableLife", createAttributes);
+			long maxRenewableLife = 0;
+			if (tempAttr != null) {
+				maxRenewableLife = AttributeUtil.getLongValue(tempAttr) / 1000;
+				mask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
+			}
+
 			if (name != null) {
 				String guardedPassword = null;
 				if (password != null) {
 					guardedPassword = GuardedStringAccessor.getString(password);
 				}
 				logger.info("Creating Kerberos principal {0}", name.getNameValue());
-				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry, attributes, policy, mask);
-				return new Uid(AttributeUtil.getStringValue(name).toLowerCase());
+				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry, attributes, policy, maxTicketLife, maxRenewableLife, mask);
+				return new Uid(AttributeUtil.getStringValue(name));
 			} else {
 				throw new InvalidAttributeValueException("Name attribute is required");
 			}
@@ -255,6 +269,8 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			long passwordExpiry = 0;
 			KerberosFlags attributes = new KerberosFlags(0);
 			String policy = null;
+			long maxTicketLife = 0;
+			long maxRenewableLife = 0;
 			int mask = 0;
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.DISABLE_DATE_NAME)) {
@@ -275,6 +291,16 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			if (attributesAccessor.hasAttribute("policy")) {
 				policy = attributesAccessor.findString("policy");
 				mask |= KerberosPrincipal.KRBCONN_POLICY;
+			}
+
+			if (attributesAccessor.hasAttribute("maxTicketLife")) {
+				maxTicketLife = attributesAccessor.findLong("maxTicketLife") / 1000;
+				mask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
+			}
+
+			if (attributesAccessor.hasAttribute("maxRenewableLife")) {
+				maxRenewableLife = attributesAccessor.findLong("maxRenewableLife") / 1000;
+				mask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
 			}
 
 			// set of principal flags to set
@@ -305,7 +331,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 					logger.info("New Kerberos principal attributes of {0}: {1}", uid.getUidValue(), attributes.getAttributes());
 				}
 				logger.info("Modifying Kerberos principal {0}: mask {1}", uid.getUidValue(), mask);
-				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes.getAttributes(), policy, mask);
+				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes.getAttributes(), policy, maxTicketLife, maxRenewableLife, mask);
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_NAME)) {
@@ -351,16 +377,24 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 		attributes.add(OperationalAttributeInfos.PASSWORD_EXPIRATION_DATE);
 
 		attributes.add(AttributeInfoBuilder.build("passwordChangeDate",
-			long.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
+
+		attributes.add(AttributeInfoBuilder.build("lastLoginDate",
+				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
+
+		attributes.add(AttributeInfoBuilder.build("lastFailedDate",
+				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
 		attributes.add(AttributeInfoBuilder.build("modifyPrincipal",
-			String.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+			String.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
 		attributes.add(AttributeInfoBuilder.build("modifyDate",
-			long.class, EnumSet.of(Flags.NOT_UPDATEABLE)));
+			long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
 		attributes.add(AttributeInfoBuilder.build("attributes", int.class));
 		attributes.add(AttributeInfoBuilder.build("policy", String.class));
+		attributes.add(AttributeInfoBuilder.build("maxTicketLife", long.class));
+		attributes.add(AttributeInfoBuilder.build("maxRenewableLife", long.class));
 
 		for (String flag : KerberosFlags.flags) {
 			attributes.add(AttributeInfoBuilder.build(flag, boolean.class));

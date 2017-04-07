@@ -11,6 +11,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -92,14 +93,34 @@ public class KerberosConnectorTests {
 	@Test
 	public void createTest() {
 		logger.info("Running Create Test");
+
+		final long modifyDate = System.currentTimeMillis();
+		final long princExpire = modifyDate + 1000 * 7 * 24 * 3600;
+		final long maxLife = 1000 * 4 * 3600;
+		final long maxRenew = 1000 * 24 * 3600;
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
-		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		ConnectorObject co;
+
 		Set<Attribute> createAttributes = new HashSet<Attribute>();
 		createAttributes.add(new Name("Foo"));
 		createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
 		createAttributes.add(AttributeBuilder.buildEnabled(true));
-		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, builder.build());
-		Assert.assertEquals(uid.getUidValue(), "foo");
+		createAttributes.add(AttributeBuilder.buildDisableDate(princExpire));
+		createAttributes.add(AttributeBuilder.build("requiresPreauth", true));
+		createAttributes.add(AttributeBuilder.build("maxTicketLife", maxLife));
+		createAttributes.add(AttributeBuilder.build("maxRenewableLife", maxRenew));
+		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+		Assert.assertEquals(uid.getUidValue(), "Foo");
+
+		co = facade.getObject(ObjectClass.ACCOUNT, new Uid("Foo"), null);
+		Assert.assertNotNull(co);
+		long validTo = AttributeUtil.getLongValue(co.getAttributeByName(OperationalAttributes.DISABLE_DATE_NAME));
+		long maxLife2 = AttributeUtil.getLongValue(co.getAttributeByName("maxTicketLife"));
+		long maxRenew2 = AttributeUtil.getLongValue(co.getAttributeByName("maxRenewableLife"));
+		Assert.assertEquals(precRound(validTo, 2 * 1000), precRound(princExpire, 2 * 1000));
+		Assert.assertEquals(precRound(maxLife2, 2 * 1000), precRound(maxLife, 2 * 1000));
+		Assert.assertEquals(precRound(maxRenew2, 2 * 1000), precRound(maxRenew, 2 * 1000));
+		//FIXME: Assert.assertTrue(AttributeUtil.getBooleanValue(co.getAttributeByName("requiresPreauth")));
 	}
 
 	@Test
@@ -383,11 +404,35 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
+	public void updateLife() {
+		logger.info("Running Update Ticket/Renew Life Test");
+
+		final String principal = "update-test";
+		final long maxTicket = 1000 * 3600 * 4;
+		final long maxRenew = 1000 * 3600 * 24;
+		final Uid testUid = new Uid(principal);
+		Uid uid;
+		ConnectorObject co;
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		Set<Attribute> updateAttributes;
+
+		updateAttributes = new HashSet<Attribute>();
+		updateAttributes.add(AttributeBuilder.build("maxTicketLife", maxTicket));
+		updateAttributes.add(AttributeBuilder.build("maxRenewableLife", maxRenew));
+		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		Assert.assertEquals(uid.getUidValue(), principal);
+		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		Assert.assertNotNull(co);
+		Assert.assertEquals(co.getAttributeByName("maxTicketLife").getValue().get(0), maxTicket);
+		Assert.assertEquals(co.getAttributeByName("maxRenewableLife").getValue().get(0), maxRenew);
+	}
+
+	@Test
 	public void enableTest() {
 		logger.info("Running Enable Test");
 
 		final String principal = "update-test";
-		Uid testUid = new Uid(principal);
+		final Uid testUid = new Uid(principal);
 		Uid uid;
 		ConnectorObject co;
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);

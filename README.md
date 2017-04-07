@@ -58,10 +58,14 @@ Operational attributes:
 Attributes:
 
 * **passwordChangeDate** (long)
+* **lastLoginDate** (long)
+* **lastFailedDate** (long)
 * **attributes** (int): all Kerberos principal flags as integer mask
 * **policy** (string)
 * **modifyPrincipal** (string)
 * **modifyDate** (long)
+* **maxTicketLife** (long)
+* **maxRenewableLife** (long)
 * **allowTix** (boolean): Kerberos principal flag, mapped also to **attributes** and administrative status
 * **allowForwardable** (boolean): Kerberos principal flag, mapped also to **attributes**
 * **allowRenewable** (boolean): Kerberos principal flag, mapped also to **attributes**

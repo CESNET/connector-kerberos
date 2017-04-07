@@ -162,6 +162,10 @@ static long krbconn_fill_princrec(krb5_context krb, kadm5_principal_ent_rec *krb
 		mask |= KADM5_PW_EXPIRATION;
 		krbrec->pw_expiration = info->pwd_expire;
 	}
+	if ((mask_in & KRBCONN_LAST_PWD_CHANGE) != 0) {
+		mask |= KADM5_LAST_PWD_CHANGE;
+		krbrec->last_pwd_change = info->pwd_change;
+	}
 	if ((mask_in & KRBCONN_ATTRIBUTES) != 0) {
 		mask |= KADM5_ATTRIBUTES;
 		krbrec->attributes = info->attributes;
@@ -173,6 +177,14 @@ static long krbconn_fill_princrec(krb5_context krb, kadm5_principal_ent_rec *krb
 		} else {
 			mask |= KADM5_POLICY_CLR;
 		}
+	}
+	if ((mask_in & KRBCONN_MAX_LIFE) != 0) {
+		mask |= KADM5_MAX_LIFE;
+		krbrec->max_life = info->max_ticket_life;
+	}
+	if ((mask_in & KRBCONN_MAX_RLIFE) != 0) {
+		mask |= KADM5_MAX_RLIFE;
+		krbrec->max_renewable_life = info->max_renewable_life;
 	}
 
 	*mask_out = mask;
@@ -209,6 +221,10 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 	result->mod_date = krbresult.mod_date;
 	result->attributes = krbresult.attributes;
 	if (krbresult.policy) result->policy = strdup(krbresult.policy);
+	result->max_ticket_life = krbresult.max_life;
+	result->max_renewable_life = krbresult.max_renewable_life;
+	result->last_login = krbresult.last_success;
+	result->last_failed_login = krbresult.last_success;
 
 	kadm5_free_principal_ent(ctx->handle, &krbresult);
 
@@ -451,9 +467,19 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 	krbconn_free_config(&conf);
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, jobject this, jstring name, jstring pass,
-                                                                  jlong princ_expiry, jlong pass_expiry,
-                                                                  jint attrs, jstring policy, jint mask) {
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(
+	JNIEnv *env,
+	jobject this,
+	jstring name,
+	jstring pass,
+	jlong princ_expiry,
+	jlong pass_expiry,
+	jint attrs,
+	jstring policy,
+	jlong max_ticket_life,
+	jlong max_renewable_life,
+	jint mask
+) {
 	krbconn_context_t* ctx = getContext(env, this);
 	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
 
@@ -480,6 +506,9 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(JNIEnv *env, j
 		(*env)->DeleteLocalRef(env, policy);
 		princ->policy = str;
 	}
+
+	princ->max_ticket_life = max_ticket_life;
+	princ->max_renewable_life = max_renewable_life;
 
 	if (pass != NULL) {
 		temp = (*env)->GetStringUTFChars(env, pass, 0);
@@ -577,7 +606,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 		results = (*env)->NewGlobalRef(env, results);
 	}
 	if (mid == NULL) {
-		mid = (*env)->GetMethodID(env, results, "<init>", "([Lcz/zcu/KerberosPrincipal;I)V");
+		mid = (*env)->GetMethodID(env, results, "<init>", SIGNATURE_KERBEROS_SEARCH_RESULT_INIT);
 	}
 
 	jint remaining = count - pageOffset - trueCount;
@@ -632,9 +661,18 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env,
 		throwKerberosException(env, ctx, err);
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, jobject this, jstring name,
-                                                                     jlong princ_expiry, jlong password_expiry,
-                                                                     jint attributes, jstring policy, jint mask) {
+JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(
+	JNIEnv *env,
+	jobject this,
+	jstring name,
+	jlong princ_expiry,
+	jlong password_expiry,
+	jint attributes,
+	jstring policy,
+	jlong max_ticket_life,
+	jlong max_renewable_life,
+	jint mask
+) {
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
 
@@ -663,6 +701,14 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(JNIEnv *env, j
 		princ->policy = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, policy, temp);
 		(*env)->DeleteLocalRef(env, policy);
+	}
+
+	if ((mask & KRBCONN_MAX_LIFE) != 0) {
+		princ->max_ticket_life = max_ticket_life;
+	}
+
+	if ((mask & KRBCONN_MAX_RLIFE) != 0) {
+		princ->max_renewable_life = max_renewable_life;
 	}
 
 	long err = krbconn_modify(ctx, princ, mask);

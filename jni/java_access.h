@@ -3,6 +3,11 @@
 
 #include "kerberos.h"
 
+// keep in sync with KerberosPrincipal.java
+#define SIGNATURE_KERBEROS_PRINCIPAL_INIT "(Ljava/lang/String;JJJLjava/lang/String;JILjava/lang/String;JJJJ)V"
+// keep in sync with KerberosSearchResult.java
+#define SIGNATURE_KERBEROS_SEARCH_RESULT_INIT "([Lcz/zcu/KerberosPrincipal;I)V"
+
 char* jstring_getter(JNIEnv *, jobject, const char*);
 char* jguardedstring_getter(JNIEnv *, jobject, const char*, jclass);
 krbconn_context_t* getContext(JNIEnv*, jobject);

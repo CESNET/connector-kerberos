@@ -1,5 +1,9 @@
 package cz.zcu;
 
+/**
+ * Helper object to keep search results.
+ */
+// keep in sync with java_access.h
 public class KerberosSearchResults {
 	KerberosPrincipal[] principals;
 	int remaining;
