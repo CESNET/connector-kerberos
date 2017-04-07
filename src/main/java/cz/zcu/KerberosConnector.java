@@ -9,6 +9,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.InvalidAttributeValueException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.AttributeInfo.Flags;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
@@ -134,67 +135,51 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 */
 	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
-			Attribute tempAttr;
-
+			AttributesAccessor attributesAccessor = new AttributesAccessor(createAttributes);
 			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
 			GuardedString password = AttributeUtil.getPasswordValue(createAttributes);
+
+			if (name == null)
+				throw new InvalidAttributeValueException("Name attribute is required");
 
 			//In case of creating a principal, it's necessary to set its name
 			int mask = KerberosPrincipal.KRBCONN_PRINCIPAL;
 
-			tempAttr = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, createAttributes);
-			long principalExpiry = 0;
-			if (tempAttr != null) {
-				principalExpiry = AttributeUtil.getLongValue(tempAttr) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
-			}
+			KerberosPrincipal record = new KerberosPrincipal(createAttributes);
+			KerberosFlags attributes = record.getAttributes();
+			mask = (mask | record.getUpdateMask());
 
-			tempAttr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, createAttributes);
-			long passwordExpiry = 0;
-			if (tempAttr != null) {
-				passwordExpiry = AttributeUtil.getLongValue(tempAttr) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
+			// set of principal flags to set
+			Set<String> flags = KerberosFlags.selectFlagAttributes(attributesAccessor.listAttributeNames());
+			// modify principal attributes
+			for (String flag : flags) {
+				attributes.setFlag(flag, attributesAccessor.findBoolean(flag));
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
-
-			tempAttr = AttributeUtil.find("attributes", createAttributes);
-			int attributes = 0;
-			if (tempAttr != null) {
-				attributes = AttributeUtil.getIntegerValue(tempAttr);
+			// enable/disable principal using "allowTix" flag
+			if (attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME)) {
+				boolean enable = attributesAccessor.findBoolean(OperationalAttributes.ENABLE_NAME);
+				attributes.setFlag("allowTix", enable);
 				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 
-			tempAttr = AttributeUtil.find("policy", createAttributes);
-			String policy = null;
-			if (tempAttr != null) {
-				policy = AttributeUtil.getStringValue(tempAttr);
-				mask |= KerberosPrincipal.KRBCONN_POLICY;
-			}
+			String guardedPassword = null;
+			if (password != null)
+				guardedPassword = GuardedStringAccessor.getString(password);
 
-			tempAttr = AttributeUtil.find("maxTicketLife", createAttributes);
-			long maxTicketLife = 0;
-			if (tempAttr != null) {
-				maxTicketLife = AttributeUtil.getLongValue(tempAttr) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
-			}
+			logger.info("Creating Kerberos principal {0}, update mask {1}", name.getNameValue(), mask);
+			krb5_create(
+					name.getNameValue(),
+					guardedPassword,
+					record.getPrincExpiry(),
+					record.getPwdExpiry(),
+					attributes.getAttributes(),
+					record.getPolicy(),
+					record.getMaxTicketLife(),
+					record.getMaxRenewableLife(),
+					mask);
 
-			tempAttr = AttributeUtil.find("maxRenewableLife", createAttributes);
-			long maxRenewableLife = 0;
-			if (tempAttr != null) {
-				maxRenewableLife = AttributeUtil.getLongValue(tempAttr) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
-			}
-
-			if (name != null) {
-				String guardedPassword = null;
-				if (password != null) {
-					guardedPassword = GuardedStringAccessor.getString(password);
-				}
-				logger.info("Creating Kerberos principal {0}", name.getNameValue());
-				krb5_create(name.getNameValue(), guardedPassword, principalExpiry, passwordExpiry, attributes, policy, maxTicketLife, maxRenewableLife, mask);
-				return new Uid(AttributeUtil.getStringValue(name));
-			} else {
-				throw new InvalidAttributeValueException("Name attribute is required");
-			}
+			return new Uid(AttributeUtil.getStringValue(name));
 		} else {
 			logger.warn("Create of type {0} is not supported",
 					configuration.getConnectorMessages().format(objectClass.getDisplayNameKey(), objectClass.getObjectClassValue()));
@@ -264,44 +249,9 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 		Uid returnUid = uid;
 		if (ObjectClass.ACCOUNT.equals(objectClass)) {
 			AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
-
-			long principalExpiry = 0;
-			long passwordExpiry = 0;
-			KerberosFlags attributes = new KerberosFlags(0);
-			String policy = null;
-			long maxTicketLife = 0;
-			long maxRenewableLife = 0;
-			int mask = 0;
-
-			if (attributesAccessor.hasAttribute(OperationalAttributes.DISABLE_DATE_NAME)) {
-				principalExpiry = attributesAccessor.findLong(OperationalAttributes.DISABLE_DATE_NAME) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
-			}
-
-			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME)) {
-				passwordExpiry = attributesAccessor.findLong(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME) / 1000;
-				mask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
-			}
-
-			if (attributesAccessor.hasAttribute("attributes")) {
-				attributes = new KerberosFlags(attributesAccessor.findInteger("attributes"));
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
-			}
-
-			if (attributesAccessor.hasAttribute("policy")) {
-				policy = attributesAccessor.findString("policy");
-				mask |= KerberosPrincipal.KRBCONN_POLICY;
-			}
-
-			if (attributesAccessor.hasAttribute("maxTicketLife")) {
-				maxTicketLife = attributesAccessor.findLong("maxTicketLife") / 1000;
-				mask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
-			}
-
-			if (attributesAccessor.hasAttribute("maxRenewableLife")) {
-				maxRenewableLife = attributesAccessor.findLong("maxRenewableLife") / 1000;
-				mask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
-			}
+			KerberosPrincipal record = new KerberosPrincipal(replaceAttributes);
+			KerberosFlags attributes = record.getAttributes();
+			int mask = record.getUpdateMask();
 
 			// set of principal flags to set
 			Set<String> flags = KerberosFlags.selectFlagAttributes(attributesAccessor.listAttributeNames());
@@ -309,9 +259,8 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			if (!attributesAccessor.hasAttribute("attributes") && (!flags.isEmpty() || attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME))) {
 				logger.info("Getting principal {0} to get current attributes", uid.getUidValue());
 				KerberosSearchResults results = krb5_search(uid.getUidValue(), 0, 0);
-				if (results.principals == null || results.principals.length != 1) {
-					throw new KerberosException("Modified principal " + uid.getUidValue() + " not found!");
-				}
+				if (results.principals == null || results.principals.length != 1)
+					throw new UnknownUidException("Modified principal " + uid.getUidValue() + " not found!");
 
 				attributes = results.principals[0].getAttributes();
 				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
@@ -319,19 +268,29 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			// modify principal attributes
 			for (String flag : flags) {
 				attributes.setFlag(flag, attributesAccessor.findBoolean(flag));
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 			// enable/disable principal using "allowTix" flag
 			if (attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME)) {
 				boolean enable = attributesAccessor.findBoolean(OperationalAttributes.ENABLE_NAME);
 				attributes.setFlag("allowTix", enable);
+				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
 			}
 
 			if (mask != 0) {
 				if ((mask & KerberosPrincipal.KRBCONN_ATTRIBUTES) != 0) {
 					logger.info("New Kerberos principal attributes of {0}: {1}", uid.getUidValue(), attributes.getAttributes());
 				}
-				logger.info("Modifying Kerberos principal {0}: mask {1}", uid.getUidValue(), mask);
-				krb5_modify(uid.getUidValue(), principalExpiry, passwordExpiry, attributes.getAttributes(), policy, maxTicketLife, maxRenewableLife, mask);
+				logger.info("Modifying Kerberos principal {0}, update mask {1}", uid.getUidValue(), mask);
+				krb5_modify(
+					uid.getUidValue(),
+					record.getPrincExpiry(),
+					record.getPwdExpiry(),
+					attributes.getAttributes(),
+					record.getPolicy(),
+					record.getMaxTicketLife(),
+					record.getMaxRenewableLife(),
+					mask);
 			}
 
 			if (attributesAccessor.hasAttribute(OperationalAttributes.PASSWORD_NAME)) {

@@ -1,5 +1,6 @@
 package cz.zcu;
 
+import java.util.Set;
 import org.identityconnectors.framework.common.objects.*;
 
 public class KerberosPrincipal {
@@ -27,6 +28,8 @@ public class KerberosPrincipal {
 	private long lastLoginDate;
 	private long lastFailedDate;
 
+	private int updateMask;
+
 	/**
 	 * Kerberos principal object.
 	 */
@@ -46,6 +49,59 @@ public class KerberosPrincipal {
 		this.maxRenewableLife = maxRenewableLife;
 		this.lastLoginDate = lastLoginDate;
 		this.lastFailedDate = lastFailedDate;
+
+		this.updateMask = 0;
+	}
+
+	public KerberosPrincipal(Set<Attribute> attrs) {
+		Attribute attr;
+
+		modifyPrincipal = null;
+		modifyDate = 0;
+		lastLoginDate = 0;
+		lastFailedDate = 0;
+
+		attr = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, attrs);
+		princExpiry = 0;
+		if (attr != null) {
+			princExpiry = AttributeUtil.getLongValue(attr) / 1000;
+			updateMask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
+		}
+
+		attr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, attrs);
+		pwdExpiry = 0;
+		if (attr != null) {
+			pwdExpiry = AttributeUtil.getLongValue(attr) / 1000;
+			updateMask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
+		}
+
+		attr = AttributeUtil.find("attributes", attrs);
+		attributes = new KerberosFlags(0);
+		if (attr != null) {
+			attributes.setAttributes(AttributeUtil.getIntegerValue(attr));
+			updateMask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+		}
+
+		attr = AttributeUtil.find("policy", attrs);
+		policy = null;
+		if (attr != null) {
+			policy = AttributeUtil.getStringValue(attr);
+			updateMask |= KerberosPrincipal.KRBCONN_POLICY;
+		}
+
+		attr = AttributeUtil.find("maxTicketLife", attrs);
+		maxTicketLife = 0;
+		if (attr != null) {
+			maxTicketLife = AttributeUtil.getLongValue(attr) / 1000;
+			updateMask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
+		}
+
+		attr = AttributeUtil.find("maxRenewableLife", attrs);
+		maxRenewableLife = 0;
+		if (attr != null) {
+			maxRenewableLife = AttributeUtil.getLongValue(attr) / 1000;
+			updateMask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
+		}
 	}
 
 	public String getName() {
@@ -85,14 +141,14 @@ public class KerberosPrincipal {
 	}
 
 	public long getMaxRenewableLife() {
-		return maxTicketLife;
+		return maxRenewableLife;
 	}
 
 	public long getLastLoginDate() {
 		return lastLoginDate;
 	}
 
-	public long getLastFailedLogin() {
+	public long getLastFailedDate() {
 		return lastFailedDate;
 	}
 
@@ -103,6 +159,15 @@ public class KerberosPrincipal {
 	 */
 	public boolean enabled() {
 		return attributes.hasAllowTix();
+	}
+
+	/**
+	 * Get the update mask for JNI library.
+	 *
+	 * @return Kerberos connector update mask for krb5_modify() native call
+	 */
+	public int getUpdateMask() {
+		return updateMask;
 	}
 
 	public ConnectorObject toConnectorObject() {

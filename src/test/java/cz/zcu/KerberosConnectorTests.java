@@ -120,7 +120,8 @@ public class KerberosConnectorTests {
 		Assert.assertEquals(precRound(validTo, 2 * 1000), precRound(princExpire, 2 * 1000));
 		Assert.assertEquals(precRound(maxLife2, 2 * 1000), precRound(maxLife, 2 * 1000));
 		Assert.assertEquals(precRound(maxRenew2, 2 * 1000), precRound(maxRenew, 2 * 1000));
-		//FIXME: Assert.assertTrue(AttributeUtil.getBooleanValue(co.getAttributeByName("requiresPreauth")));
+		Assert.assertTrue(AttributeUtil.getBooleanValue(co.getAttributeByName("requiresPreauth")));
+		Assert.assertEquals((int)AttributeUtil.getIntegerValue(co.getAttributeByName("attributes")), 128);
 	}
 
 	@Test
