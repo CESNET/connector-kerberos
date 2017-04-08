@@ -6,4 +6,5 @@ user3,p3,default,128,admin,1483225200
 test,t1,default,128,admin,1483225200
 rename-test,t2,default,128,admin,1483225200
 update-test,t1,default,128,admin,1483225200
+password-test,,default,128,admin,1483225200
 host/pokuston,2JvxZTi0ywVHhPv2,default_nohistory,128,admin,1483225200

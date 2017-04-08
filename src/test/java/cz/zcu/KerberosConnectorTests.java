@@ -125,6 +125,29 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
+	public void createRandkeyTest() {
+		logger.info("Running Create Randkey Test");
+
+		final String principal = "host/foo";
+		final String policy = "default_nohistory";
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		ConnectorObject co;
+
+		Set<Attribute> createAttributes = new HashSet<Attribute>();
+		createAttributes.add(new Name(principal));
+		createAttributes.add(AttributeBuilder.build("policy", policy));
+		createAttributes.add(AttributeBuilder.build("requiresPreauth", true));
+		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+		Assert.assertEquals(uid.getUidValue(), principal);
+
+		co = facade.getObject(ObjectClass.ACCOUNT, new Uid(principal), null);
+		Assert.assertNotNull(co);
+		Assert.assertTrue(AttributeUtil.getBooleanValue(co.getAttributeByName("requiresPreauth")));
+		Assert.assertEquals((int)AttributeUtil.getIntegerValue(co.getAttributeByName("attributes")), 128);
+		Assert.assertEquals(AttributeUtil.getStringValue(co.getAttributeByName("policy")), policy);
+	}
+
+	@Test
 	public void deleteTest() {
 		logger.info("Running Delete Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
@@ -458,6 +481,28 @@ public class KerberosConnectorTests {
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), 128);
 		Assert.assertEquals(co.getAttributeByName("allowTix").getValue().get(0), true);
+	}
+
+	@Test
+	public void changePasswordTest() {
+		logger.info("Running Change Password Test");
+
+		final String principal = "password-test";
+		final Uid testUid = new Uid(principal);
+		Uid uid;
+		ConnectorObject co;
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		Set<Attribute> attrs;
+
+		attrs = new HashSet<Attribute>();
+		attrs.add(AttributeBuilder.buildPassword("new-password".toCharArray()));
+		uid = facade.update(ObjectClass.ACCOUNT, testUid, attrs, null);
+		Assert.assertEquals(uid.getUidValue(), principal);
+		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		Assert.assertNotNull(co);
+
+		// empty password not supported: ConnId expect always non-empty password
+		//attrs.add(AttributeBuilder.build(OperationalAttributes.PASSWORD_NAME));
 	}
 
 	protected ConnectorFacade getFacade(KerberosConfiguration config) {

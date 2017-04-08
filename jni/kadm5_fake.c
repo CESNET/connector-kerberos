@@ -855,7 +855,7 @@ kadm5_ret_t kadm5_chpass_principal(
 	if (i == -1) return ERROR_UNKNOWN_PRINCIPAL;
 
 	free(ctx->db[i].password);
-	ctx->db[i].password = strdup(pass);
+	ctx->db[i].password = pass ? strdup(pass) : NULL;
 	UNLOCK(ctx);
 
 	return 0;
