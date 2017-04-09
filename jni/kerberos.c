@@ -384,6 +384,9 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 		case KADM5_RPC_ERROR:
 			exception = "org/identityconnectors/framework/common/exceptions/ConnectionBrokenException";
 			break;
+		case KADM5_UNK_PRINC:
+			exception = "org/identityconnectors/framework/common/exceptions/UnknownUidException";
+			break;
 		default:
 			exception = "cz/zcu/exceptions/KerberosException";
 	}
