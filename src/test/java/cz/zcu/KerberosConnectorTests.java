@@ -338,15 +338,23 @@ public class KerberosConnectorTests {
 		final Uid testUid = new Uid(principal);
 		Uid uid;
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("policy", "mypolicy"));
-
 		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-
 		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("policy").getValue().get(0), "mypolicy");
+
+		// clear policy
+		updateAttributes = new HashSet<Attribute>();
+		updateAttributes.add(AttributeBuilder.build("policy"));
+		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		Assert.assertEquals(uid.getUidValue(), principal);
+		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		Assert.assertNotNull(co);
+		Assert.assertNull(co.getAttributeByName("policy").getValue().get(0));
 	}
 
 	@Test

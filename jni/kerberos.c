@@ -695,7 +695,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(
 		princ->attributes = attributes;
 	}
 
-	if ((mask & KRBCONN_POLICY) != 0) {
+	if (((mask & KRBCONN_POLICY) != 0) && policy) {
 		temp = (*env)->GetStringUTFChars(env, policy, 0);
 		princ->policy = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, policy, temp);
