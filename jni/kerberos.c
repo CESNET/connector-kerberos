@@ -484,15 +484,13 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(
 	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
 
 	const char* temp;
-	char* str;
 	char *pass_str = NULL;
 
 	if (name != NULL) {
 		temp = (*env)->GetStringUTFChars(env, name, 0);
-		str = strdup(temp);
+		princ->name = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, name, temp);
 		(*env)->DeleteLocalRef(env, name);
-		princ->name = str;
 	}
 
 	princ->princ_expire = princ_expiry;
@@ -501,10 +499,9 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(
 
 	if (policy != NULL) {
 		temp = (*env)->GetStringUTFChars(env, policy, 0);
-		str = strdup(temp);
+		princ->policy = strdup(temp);
 		(*env)->ReleaseStringUTFChars(env, policy, temp);
 		(*env)->DeleteLocalRef(env, policy);
-		princ->policy = str;
 	}
 
 	princ->max_ticket_life = max_ticket_life;
@@ -676,13 +673,12 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
 
+	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
+
 	temp = (*env)->GetStringUTFChars(env, name, 0);
-	char* princ_name = strdup(temp);
+	princ->name = strdup(temp);
 	(*env)->ReleaseStringUTFChars(env, name, temp);
 	(*env)->DeleteLocalRef(env, name);
-
-	krbconn_principal_t* princ = calloc(sizeof(krbconn_principal_t), 1);
-	princ->name = princ_name;
 
 	if ((mask & KRBCONN_PRINC_EXPIRE_TIME) != 0) {
 		princ->princ_expire = princ_expiry;
@@ -712,9 +708,8 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(
 	}
 
 	long err = krbconn_modify(ctx, princ, mask);
-
+	krbconn_free_principal(princ);
 	free(princ);
-	free(princ_name);
 
 	if (err)
 		throwKerberosException(env, ctx, err);
