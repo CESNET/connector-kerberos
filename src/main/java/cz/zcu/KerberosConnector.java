@@ -212,6 +212,8 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 * {@inheritDoc}
 	 */
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
+		int remaining = 0;
+
 		logger.info("Executing query: {0}", query);
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
 			logger.info("Paged search was requested. Offset: {0}. Count: {1}.", options.getPagedResultsOffset(), options.getPageSize());
@@ -223,13 +225,16 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 				results = krb5_search(query, options.getPageSize(), options.getPagedResultsOffset());
 			}
 
-			for (KerberosPrincipal principal : results.principals) {
-				if (!handler.handle(principal.toConnectorObject())) {
-					//Stop iterating because the handler stopped processing
-					break;
+			if (results != null) {
+				for (KerberosPrincipal principal : results.principals) {
+					if (!handler.handle(principal.toConnectorObject())) {
+					//	Stop iterating because the handler stopped processing
+						break;
+					}
 				}
+				remaining = results.remaining;
 			}
-			((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", results.remaining));
+			((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", remaining));
 		} else {
 			logger.info("Full search was requested.");
 			KerberosSearchResults results = krb5_search(query, 0, 0);

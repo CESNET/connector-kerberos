@@ -252,6 +252,20 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
+	public void searchPageOutOfRangeTest() {
+		logger.info("Running \"Page out of range\" Search Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setPageSize(10);
+		builder.setPagedResultsOffset(10000);
+		final ResultsHandler handler = new ToListResultsHandler();
+
+		SearchResult result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(new Name("user")), handler, builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 0);
+	}
+
+	@Test
 	public void testTest() {
 		logger.info("Running Test Test");
 
