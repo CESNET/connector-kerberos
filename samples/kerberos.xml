@@ -4,7 +4,8 @@
           xmlns:c="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
           xmlns:t="http://prism.evolveum.com/xml/ns/public/types-3"
           xmlns:icfs="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3"
-          xmlns:ri="http://midpoint.evolveum.com/xml/ns/public/resource/instance-3">
+          xmlns:ri="http://midpoint.evolveum.com/xml/ns/public/resource/instance-3"
+>
 
    <name>Kerberos</name>
 
@@ -54,6 +55,11 @@
                <source>
                   <c:path>$user/name</c:path>
                </source>
+               <expression>
+                  <script>
+                     <code>name + '@$(kerberosRealm)'</code>
+                  </script>
+               </expression>
             </outbound>
          </attribute>
          <attribute>
@@ -103,11 +109,24 @@
          <focusType>c:UserType</focusType>
          <enabled>true</enabled>
          <correlation>
-            <q:description>correlation1_1</q:description>
+            <q:description>correlation_principal</q:description>
             <q:equal>
                <q:path>c:name</q:path>
                <expression>
-                  <path>declare namespace icfs='http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3'; $account/attributes/icfs:name</path>
+                  <script>
+                     <code>
+principal = basic.getAttributeValue(account, 'http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3', 'name')
+nameRegExp = /^(.*)@$(kerberosRealm)$/
+matcher = (principal =~ nameRegExp)
+if (matcher.matches()) {
+  log.info('principal: {}, intent: default, correlated owner: {}', principal, matcher[0][1])
+  return matcher[0][1]
+} else {
+  log.warn('principal: {}, intent: default, no correlated owner', principal)
+  return '###ThisIsAnExpressionThatWillNeverMatchUserName###'
+}
+                    </code>
+                  </script>
                </expression>
             </q:equal>
          </correlation>

@@ -129,19 +129,6 @@ static krb5_error_code krbconn_princ2str(krb5_context krb, krb5_principal princi
 }
 
 
-static void krbconn_princ_striprealm(char *name, const char *realm) {
-	size_t len, len_realm;
-
-	if (realm) {
-		len_realm = strlen(realm);
-		len = strlen(name);
-		if (len <= len_realm) return;
-		if (name[len - len_realm - 1] != '@') return;
-		name[len - len_realm - 1] = '\0';
-	}
-}
-
-
 /*
  * fill KADM5 principal record according to the specified masks
  */
@@ -212,12 +199,10 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 
 	memset(result, 0, sizeof(*result));
 	if ((code = krbconn_princ2str(ctx->krb, krbresult.principal, &result->name)) != 0) return code;
-	krbconn_princ_striprealm(result->name, ctx->realm);
 	result->princ_expire = krbresult.princ_expire_time;
 	result->pwd_expire = krbresult.pw_expiration;
 	result->pwd_change = krbresult.last_pwd_change;
 	if ((code = krbconn_princ2str(ctx->krb, krbresult.mod_name, &result->mod_name)) != 0) return code;
-	krbconn_princ_striprealm(result->mod_name, ctx->realm);
 	result->mod_date = krbresult.mod_date;
 	result->attributes = krbresult.attributes;
 	if (krbresult.policy) result->policy = strdup(krbresult.policy);

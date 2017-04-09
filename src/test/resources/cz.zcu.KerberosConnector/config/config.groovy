@@ -10,6 +10,7 @@ configuration{
     // see jni/kadm5_fake.c
     principal="admin@EXAMPLE.COM"
     password=new GuardedString("password".toCharArray())
+    realm="EXAMPLE.COM"
 }
 
 environments {

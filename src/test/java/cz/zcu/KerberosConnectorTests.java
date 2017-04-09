@@ -52,7 +52,9 @@ public class KerberosConnectorTests {
 	* Example test properties.
 	* See the Javadoc of the TestHelpers class for the location of the public and private configuration files.
 	*/
-	//private static final PropertyBag PROPERTIES = TestHelpers.getProperties(KerberosConnector.class);
+	private static final PropertyBag PROPERTIES = TestHelpers.getProperties(KerberosConnector.class);
+
+	private static final String realm = PROPERTIES.getProperty("configuration.realm", String.class);
 
 	@BeforeClass
 	public void setUp() {
@@ -165,7 +167,7 @@ public class KerberosConnectorTests {
 				facade.getObject(ObjectClass.ACCOUNT, new Uid(
 						"user2"), builder.build());
 		Assert.assertNotNull(co);
-		Assert.assertEquals(co.getName().getNameValue(), "user2");
+		Assert.assertEquals(co.getName().getNameValue(), "user2@" + realm);
 	}
 
 	@Test
@@ -185,6 +187,10 @@ public class KerberosConnectorTests {
 		final ResultsHandler handler2 = new ToListResultsHandler();
 		result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid(principal)), handler2, builder.build());
 		Assert.assertEquals(((ToListResultsHandler) handler2).getObjects().size(), 1);
+
+		final ResultsHandler handler3 = new ToListResultsHandler();
+		result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid(principal + "@" + realm)), handler3, builder.build());
+		Assert.assertEquals(((ToListResultsHandler) handler3).getObjects().size(), 1);
 	}
 
 	@Test
@@ -207,11 +213,19 @@ public class KerberosConnectorTests {
 		logger.info("Running \"Ends with\" Search Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		ResultsHandler handler;
 		builder.setPageSize(10);
-		final ResultsHandler handler = new ToListResultsHandler();
 
+		handler = new ToListResultsHandler();
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("2")), handler,
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("3")), handler,
+						builder.build());
+		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
+		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
+
+		handler = new ToListResultsHandler();
+		result =
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("3@" + realm)), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
@@ -299,7 +313,7 @@ public class KerberosConnectorTests {
 
 		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid(newPrincipal), null);
 		Assert.assertNotNull(co);
-		Assert.assertEquals(co.getName().getNameValue(), newPrincipal);
+		Assert.assertEquals(co.getName().getNameValue(), newPrincipal + "@" + realm);
 	}
 
 	@Test(expectedExceptions = { KerberosException.class, AlreadyExistsException.class })

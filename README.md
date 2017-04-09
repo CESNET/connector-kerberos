@@ -48,7 +48,7 @@ The native library (non-JNI part) can be checked using provided test example *kr
 
 Operational attributes:
 
-* **name** (NAME): principal name (without the realm suffix)
+* **name** (NAME): principal name with the realm suffix
 * **UID** (UID, read-only): the same as **name**
 * **administrativeStatus** (ENABLE): true if enabled, mapped also to **attributes** and **allowTix**
 * **validTo** (DISABLE\_DATE)
@@ -79,6 +79,8 @@ Attributes:
 
 #### Create
 
+See [Update](#update).
+
 #### Delete
 
 #### Read
@@ -87,7 +89,9 @@ Attributes:
 
 Update is translated to the proper rename, change password, or modify Kadm5 library calls on the Kerberos principal.
 
-Note, the Kerberos principal flags are represented in schema using particular flag attributes and also by integer mask *attributes*. Also enable/disable is represented by *allowTix* flag. If any combination of values is used during modification:
+**Name**: the account id is the principal name with the realm suffix. Connector will understand the plain name without the realm too, but beware such principal is in the default realm, not the realm configured in the connector. Best practice is always using the realm suffix.
+
+**Kerberos principal flags**: they are represented in schema using particular flag attributes and also by integer mask *attributes*. Also enable/disable is represented by *allowTix* flag. If any combination of values is used during modification:
 
 * particular flag attributes has precedence over *attributes*
 * enable/disable state has precedence over *allowTix*
