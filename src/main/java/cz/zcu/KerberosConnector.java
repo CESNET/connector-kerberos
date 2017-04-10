@@ -216,7 +216,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 
 		logger.info("Executing query: {0}", query);
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
-			logger.info("Paged search was requested. Offset: {0}. Count: {1}.", options.getPagedResultsOffset(), options.getPageSize());
+			logger.info("Paged search was requested. Offset: {0}. Page size: {1}", options.getPagedResultsOffset(), options.getPageSize());
 
 			KerberosSearchResults results;
 			if (options.getPagedResultsOffset() == null) {
@@ -226,22 +226,29 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			}
 
 			if (results != null) {
+				remaining = results.remaining;
 				for (KerberosPrincipal principal : results.principals) {
 					if (!handler.handle(principal.toConnectorObject())) {
-					//	Stop iterating because the handler stopped processing
+						//Stop iterating because the handler stopped processing
+						remaining = -1;
 						break;
 					}
 				}
-				remaining = results.remaining;
 			}
-			((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", remaining));
+
+			if (handler instanceof SearchResultsHandler) {
+				logger.info("Page search remaining: {0}", remaining);
+				((SearchResultsHandler)handler).handleResult(new SearchResult("NO_COOKIE", remaining));
+			}
 		} else {
 			logger.info("Full search was requested.");
 			KerberosSearchResults results = krb5_search(query, 0, 0);
-			for (KerberosPrincipal principal : results.principals) {
-				if (!handler.handle(principal.toConnectorObject())) {
-					//Stop iterating because the handler stopped processing
-					break;
+			if (results != null) {
+				for (KerberosPrincipal principal : results.principals) {
+					if (!handler.handle(principal.toConnectorObject())) {
+						//Stop iterating because the handler stopped processing
+						break;
+					}
 				}
 			}
 		}
