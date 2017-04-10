@@ -40,6 +40,11 @@ public class KerberosConfiguration extends AbstractConfiguration {
 	private int lifeTime = 2 * 3600 * 1000;
 
 	/**
+	 * Send debug message from the JNI part to syslog.
+	 */
+	private boolean debug = false;
+
+	/**
 	 * Constructor.
 	 */
 	public KerberosConfiguration() {
@@ -99,6 +104,17 @@ public class KerberosConfiguration extends AbstractConfiguration {
 
 	public void setLifeTime(int lifetime) {
 		this.lifeTime = lifetime;
+	}
+
+	@ConfigurationProperty(order = 6, displayMessageKey = "debug.display",
+			groupMessageKey = "basic.group", helpMessageKey = "debug.help",
+			required = false, confidential = false)
+	public boolean getDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 
 	/**

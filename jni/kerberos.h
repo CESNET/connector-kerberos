@@ -29,12 +29,14 @@ typedef struct {
 	char *password;
 	char *principal;
 	char *realm;
+	int debug;
 } krbconn_config_t;
 
 typedef struct {
 	krb5_context krb;
 	char *realm;
 	void *handle;
+	int debug;
 } krbconn_context_t;
 
 typedef struct {

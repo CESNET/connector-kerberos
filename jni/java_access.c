@@ -3,6 +3,20 @@
 #include "cz_zcu_KerberosConnector.h"
 #include "java_access.h"
 
+jboolean jboolean_getter(JNIEnv * env, jobject obj, const char* name) {
+	jclass cls = (*env)->GetObjectClass(env, obj);
+	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Z");
+
+	(*env)->DeleteLocalRef(env, cls);
+	if (mid == NULL) {
+		return 0;
+	}
+
+	jboolean b = (*env)->CallBooleanMethod(env, obj, mid);
+
+	return b;
+}
+
 char* jstring_getter(JNIEnv * env, jobject obj, const char* name) {
 	jclass cls = (*env)->GetObjectClass(env, obj);
 	jmethodID mid = (*env)->GetMethodID(env, cls, name, "()Ljava/lang/String;");

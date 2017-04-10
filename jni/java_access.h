@@ -8,6 +8,7 @@
 // keep in sync with KerberosSearchResult.java
 #define SIGNATURE_KERBEROS_SEARCH_RESULT_INIT "([Lcz/zcu/KerberosPrincipal;I)V"
 
+jboolean jboolean_getter(JNIEnv *, jobject, const char*);
 char* jstring_getter(JNIEnv *, jobject, const char*);
 char* jguardedstring_getter(JNIEnv *, jobject, const char*, jclass);
 krbconn_context_t* getContext(JNIEnv*, jobject);

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include <kadm5/admin.h>
 #include <profile.h>
@@ -73,6 +74,7 @@ long krbconn_renew(krbconn_context_t *ctx, krbconn_config_t *config) {
 
 	if (code != 0) return code;
 	ctx->handle = handle;
+	ctx->debug = config->debug;
 
 	return 0;
 }
@@ -82,6 +84,7 @@ long krbconn_init(krbconn_context_t *ctx, krbconn_config_t *config) {
 	krb5_context krb = NULL;
 	krb5_error_code code;
 
+	if (config->debug) openlog("krbconn", 0, LOG_DAEMON);
 	memset(ctx, 0, sizeof(*ctx));
 	code = kadm5_init_krb5_context(&krb);
 	if (code != 0) return code;
@@ -97,6 +100,7 @@ void krbconn_destroy(krbconn_context_t *ctx) {
 	if (ctx->krb) krb5_free_context(ctx->krb);
 	free(ctx->realm);
 	memset(ctx, 0, sizeof(*ctx));
+	if (ctx->debug) closelog();
 }
 
 
@@ -190,6 +194,7 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 	krb5_principal principal;
 	kadm5_principal_ent_rec krbresult;
 
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s) start", __FUNCTION__, princ_name);
 	code = krb5_parse_name(ctx->krb, princ_name, &principal);
 	if (code) return code;
 
@@ -213,6 +218,7 @@ long krbconn_get(krbconn_context_t *ctx, char *princ_name, krbconn_principal_t *
 
 	kadm5_free_principal_ent(ctx->handle, &krbresult);
 
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s) OK", __FUNCTION__, princ_name);
 	return 0;
 }
 
@@ -244,6 +250,7 @@ long krbconn_list(krbconn_context_t *ctx, const char *search, char ***list, int 
 	long code;
 	char *exp = NULL;
 
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s) start", __FUNCTION__, search);
 	*list = NULL;
 	*count = 0;
 
@@ -262,6 +269,7 @@ long krbconn_list(krbconn_context_t *ctx, const char *search, char ***list, int 
 	code = kadm5_get_principals(ctx->handle, exp, list, count);
 	free(exp);
 
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s): %lu", __FUNCTION__, search, code);
 	return code;
 }
 
@@ -276,9 +284,11 @@ long krbconn_modify(krbconn_context_t *ctx, krbconn_principal_t *info, int mask)
 	long krbmask = 0;
 	long code;
 
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s)", __FUNCTION__, info->name);
 	if ((code = krbconn_fill_princrec(ctx->krb, &krbrec, &krbmask, info, mask)) != 0) return code;
 	code = kadm5_modify_principal(ctx->handle, &krbrec, krbmask);
 	krbconn_free_princrec(ctx->krb, &krbrec);
+	if (ctx->debug) syslog(LOG_INFO, "%s(%s): %lu", __FUNCTION__, info->name, code);
 	return code;
 }
 
@@ -319,6 +329,7 @@ void krbconn_fill_config(JNIEnv *env, jobject config, krbconn_config_t* conf, jc
 	conf->principal = jstring_getter(env, config, "getPrincipal");
 	conf->password = jguardedstring_getter(env, config, "getPassword", gs_accessor);
 	conf->keytab = jstring_getter(env, config, "getKeytab");
+	conf->debug = jboolean_getter(env, config, "getDebug");
 }
 
 
@@ -380,6 +391,7 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 	retval = throwGenericException(env, exception, errMsg);
 	free(errMsg);
 
+	if (ctx->debug) syslog(LOG_INFO, "%s: %s: %lu", __FUNCTION__, exception, code);
 	return retval;
 }
 
@@ -599,6 +611,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	(*env)->DeleteLocalRef(env, arr);
 
+	if (ctx->debug) syslog(LOG_INFO, "%s() count: %ld, trueCount: %ld, remaining: %ld", __FUNCTION__, count, trueCount, remaining);
 	return out;
 }
 
