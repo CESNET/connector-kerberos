@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/CESNET/kerberos-connector.svg?branch=master)](https://travis-ci.org/CESNET/kerberos-connector)
+[![Coverage Status](https://coveralls.io/repos/github/CESNET/kerberos-connector/badge.svg?branch=master)](https://coveralls.io/github/CESNET/kerberos-connector?branch=master)
+
+
 # Kerberos Connector
 
 Native Kerberos [Polygon+ConnId](https://wiki.evolveum.com/display/midPoint/Identity+Connectors) connector based on JNI and MIT libkadm5 library.
