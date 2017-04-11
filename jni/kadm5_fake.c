@@ -68,53 +68,18 @@ typedef struct {
 	krb5_context ctx;
 } _kadm5_handle;
 
-typedef enum {
-	NO_ERROR = 0,
-	ERROR_OPEN_DATA_FILE,
-	ERROR_PARSE_DATA_FILE,
-	ERROR_MISSING_KEY,
-	ERROR_BAD_DATA,
-	ERROR_LOGIN_FAILED,
-	ERROR_UNKNOWN_PRINCIPAL,
-	ERROR_NUMBER_EXCEEDED,
-	ERROR_ALREADY_EXISTS,
-	ERROR_BAD_REALM,
-	ERROR_MISSING_PRINCIPAL,
-	ERROR_INVALID_INPUT,
-	ERROR_INIT,
-	LAST_ERROR_CODE,
-} _krb5_error_code;
-
-static const char *errors[] = {
-	"no error",
-	"can't open testing data file",
-	"can't parse testing data file",
-	"password or key required",
-	"invalid data",
-	"login failed",
-	"unknown principal",
-	"too much principals",
-	"principal already exists",
-	"bad realm",
-	"missing principal",
-	"wrong input parameters",
-	"init failed",
-	"bad error code",
-};
-#define LAST_ERROR ((sizeof(errors) / sizeof (char *)) - 1)
-
 
 
 static int check_data(const krb5_data *data) {
-	if (!data || data->magic != MAGIC_DATA) return ERROR_BAD_DATA;
+	if (!data || data->magic != MAGIC_DATA) return KADM5_INIT;
 	return 0;
 }
 
 
 static int check_principal(krb5_const_principal principal) {
-	if (principal->magic != MAGIC_PRINC) return ERROR_BAD_DATA;
-	if (principal->length != 1 || (check_data(principal->data) != 0)) return ERROR_BAD_DATA;
-	if (check_data(&principal->realm) != 0) return ERROR_BAD_DATA;
+	if (principal->magic != MAGIC_PRINC) return KADM5_BAD_PRINCIPAL;
+	if (principal->length != 1 || (check_data(principal->data) != 0)) return KADM5_BAD_PRINCIPAL;
+	if (check_data(&principal->realm) != 0) return KADM5_BAD_PRINCIPAL;
 
 	return 0;
 }
@@ -154,8 +119,8 @@ static void free_record(fake_kadm5_principal record) {
  * The record should be already valid or nullified.
  */
 static int fill_record(krb5_context ctx, fake_kadm5_principal record, kadm5_principal_ent_t ent, long mask) {
-	if (check_principal(ent->principal) != 0) return ERROR_BAD_DATA;
-	if (strcmp(ent->principal->realm.data, ctx->realm) != 0) return ERROR_BAD_REALM;
+	if (check_principal(ent->principal) != 0) return KADM5_BAD_PRINCIPAL;
+	if (strcmp(ent->principal->realm.data, ctx->realm) != 0) return KADM5_PRINCIPAL;
 
 	if ((mask & KADM5_PRINCIPAL) != 0) {
 		free(record->name);
@@ -202,7 +167,7 @@ static int str2db(char *line, fake_kadm5_principal record) {
 		values[i++] = value;
 	}
 
-	if (!values[0] || !values[0][0]) return ERROR_PARSE_DATA_FILE;
+	if (!values[0] || !values[0][0]) return KADM5_BAD_DB;
 
 	memset(record, 0, sizeof(_fake_kadm5_principal));
 	record->name = values[0];
@@ -254,11 +219,11 @@ static int db_load(krb5_context ctx, const char *path) {
 	FILE *f;
 	int code;
 
-	if ((f = fopen(path, "rt")) == NULL) return ERROR_OPEN_DATA_FILE;
+	if ((f = fopen(path, "rt")) == NULL) return KADM5_BAD_DB;
 	// header
 	if (fgets(buf, sizeof(buf), f) == NULL) {
 		fclose(f);
-		return ERROR_PARSE_DATA_FILE;
+		return KADM5_BAD_DB;
 	}
 	// data
 	LOCK(ctx);
@@ -286,13 +251,13 @@ static int db_get(krb5_context ctx, kadm5_principal_ent_t ent, krb5_const_princi
 	fake_kadm5_principal record;
 	int i;
 
-	if (check_principal(principal) != 0) return ERROR_BAD_DATA;
+	if (check_principal(principal) != 0) return KADM5_BAD_PRINCIPAL;
 
 	LOCK(ctx);
 	i = fake_search(ctx, principal);
 	if (i == -1) {
 		UNLOCK(ctx);
-		return ERROR_UNKNOWN_PRINCIPAL;
+		return KADM5_UNK_PRINC;
 	}
 	record = &ctx->db[i];
 
@@ -335,20 +300,20 @@ static int db_put(krb5_context ctx, kadm5_principal_ent_t ent, long mask, const 
 	int code;
 	size_t i;
 
-	if (check_principal(ent->principal) != 0) return ERROR_BAD_DATA;
-	if ((mask & KADM5_PRINCIPAL) == 0) return ERROR_MISSING_PRINCIPAL;
+	if (check_principal(ent->principal) != 0) return KADM5_BAD_PRINCIPAL;
+	if ((mask & KADM5_PRINCIPAL) == 0) return KADM5_BAD_MASK;
 	mask |= (KADM5_PRINCIPAL | KADM5_POLICY | KADM5_ATTRIBUTES | KADM5_PW_EXPIRATION | KADM5_LAST_PWD_CHANGE | KADM5_PRINC_EXPIRE_TIME | KADM5_MAX_LIFE | KADM5_MAX_RLIFE);
 
 	LOCK(ctx);
 	i = fake_search(ctx, ent->principal);
 	if (i != -1) {
 		UNLOCK(ctx);
-		return ERROR_ALREADY_EXISTS;
+		return KADM5_DUP;
 	}
 
 	if (ctx->n >= FAKE_MAX_N) {
 		UNLOCK(ctx);
-		return ERROR_NUMBER_EXCEEDED;
+		return KADM5_FAILURE;
 	}
 	record = &ctx->db[ctx->n];
 	memset(record, 0, sizeof(*record));
@@ -371,18 +336,18 @@ static int db_put(krb5_context ctx, kadm5_principal_ent_t ent, long mask, const 
 static int db_remove(krb5_context ctx, krb5_principal principal) {
 	size_t i, j;
 
-	if (check_principal(principal) != 0) return ERROR_BAD_DATA;
+	if (check_principal(principal) != 0) return KADM5_BAD_PRINCIPAL;
 
 	LOCK(ctx);
 	i = fake_search(ctx, principal);
 	if (i == -1) {
 		UNLOCK(ctx);
-		return ERROR_UNKNOWN_PRINCIPAL;
+		return KADM5_UNK_PRINC;
 	}
 
 	if (i >= FAKE_MAX_N) {
 		UNLOCK(ctx);
-		return ERROR_NUMBER_EXCEEDED;
+		return KADM5_FAILURE;
 	}
 
 	free_record(&ctx->db[i]);
@@ -404,14 +369,14 @@ static int db_modify(krb5_context ctx, kadm5_principal_ent_t ent, long mask) {
 	size_t i;
 	int code;
 
-	if ((mask & KADM5_PRINCIPAL) != 0) return ERROR_INVALID_INPUT;
-	if (check_principal(ent->principal) != 0) return ERROR_BAD_DATA;
+	if ((mask & KADM5_PRINCIPAL) != 0) return KADM5_BAD_MASK;
+	if (check_principal(ent->principal) != 0) return KADM5_BAD_PRINCIPAL;
 
 	LOCK(ctx);
 	i = fake_search(ctx, ent->principal);
 	if (i == -1) {
 		UNLOCK(ctx);
-		return ERROR_UNKNOWN_PRINCIPAL;
+		return KADM5_UNK_PRINC;
 	}
 
 	record = &ctx->db[i];
@@ -499,7 +464,7 @@ void krb5_free_principal(krb5_context ctx __attribute ((unused)), krb5_principal
 	int i;
 
 	if (check_principal(principal) != 0) {
-		fprintf(stderr, "%s: %s\n", __func__, errors[ERROR_BAD_DATA]);
+		fprintf(stderr, "%s: %s\n", __func__, "Corrupted principal");
 		return;
 	}
 	free(principal->realm.data);
@@ -511,7 +476,7 @@ void krb5_free_principal(krb5_context ctx __attribute ((unused)), krb5_principal
 
 
 krb5_error_code krb5_unparse_name(krb5_context ctx __attribute ((unused)), krb5_const_principal principal, register char **name) {
-	if (check_principal(principal) != 0) return ERROR_BAD_DATA;
+	if (check_principal(principal) != 0) return KADM5_BAD_PRINCIPAL;
 	asprintf(name, "%s@%s", principal->data[0].data, principal->realm.data);
 
 	return 0;
@@ -560,7 +525,7 @@ krb5_error_code krb5_build_principal_alloc_va(krb5_context ctx, krb5_principal *
 		realm = ctx->realm;
 		rlen = ctx->rlen;
 	}
-	if (rlen != strlen(realm)) return ERROR_BAD_REALM;
+	if (rlen != strlen(realm)) return KADM5_BAD_CLIENT_PARAMS;
 
 	data[0].magic = MAGIC_DATA;
 	data[0].data = strdup(princ_name);
@@ -580,9 +545,47 @@ krb5_error_code krb5_build_principal_alloc_va(krb5_context ctx, krb5_principal *
 
 
 const char *krb5_get_error_message(krb5_context ctx __attribute ((unused)), krb5_error_code code) {
-	if (code < 0 || code > LAST_ERROR_CODE) code = LAST_ERROR;
+	const char *error;
 
-	return strdup(errors[code]);
+	switch(code) {
+		case KADM5_BAD_DB:
+			error = "Bad database file";
+			break;
+		case KADM5_DUP:
+			error = "Principal already exists";
+			break;
+		case KADM5_UNK_PRINC:
+			error = "Unknown principal";
+			break;
+		case KADM5_BAD_PRINCIPAL:
+			error = "Corrupted principal";
+			break;
+		case KADM5_INIT:
+			error = "Init failed";
+			break;
+		case KADM5_BAD_CLIENT_PARAMS:
+			error = "Bad paramerers";
+			break;
+		case KADM5_BAD_MASK:
+			error = "Bad mask";
+			break;
+		case KADM5_FAILURE:
+			error = "Fake Kadm5 library failure (number exceeded?)";
+			break;
+		case KADM5_BAD_PASSWORD:
+			error = "Bad password";
+			break;
+		case KADM5_MISSING_CONF_PARAMS:
+			error = "Missing parameters";
+			break;
+		default: {
+			char *text;
+			asprintf(&text, "Unknown error %lu", code);
+			return text;
+		}
+	}
+
+	return strdup(error);
 }
 
 
@@ -612,13 +615,13 @@ krb5_error_code kadm5_init_krb5_context(krb5_context *pctx) {
 	char *realm = getenv("FAKE_KADM5_REALM") ? : DEFAULT_REALM;
 
 #ifdef FAKE_PTHREAD
-	if (pthread_mutex_init(&ctx->lock, NULL) != 0) return ERROR_INIT;
+	if (pthread_mutex_init(&ctx->lock, NULL) != 0) return KADM5_NOT_INIT;
 #endif
 	if ((code = db_load(ctx, path)) != 0) {
 		free(ctx);
 		return code;
 	}
-	if (!ctx->n) return ERROR_PARSE_DATA_FILE;
+	if (!ctx->n) return KADM5_BAD_DB;
 
 	ctx->realm = strdup(realm);
 	ctx->rlen = strlen(realm);
@@ -643,12 +646,12 @@ kadm5_ret_t kadm5_init_with_password(
 {
 	_kadm5_handle *handle;
 
-	if ((params->mask & KADM5_CONFIG_REALM) == 0) return ERROR_BAD_REALM;
-	if (strcmp(ctx->admin_name, client_name) != 0) return ERROR_LOGIN_FAILED;
+	if ((params->mask & KADM5_CONFIG_REALM) == 0) return KADM5_MISSING_CONF_PARAMS;
+	if (strcmp(ctx->admin_name, client_name) != 0) return KADM5_BAD_PASSWORD;
 	if (pass) {
-		if (strcmp(ctx->admin_password, pass) != 0) return ERROR_LOGIN_FAILED;
+		if (strcmp(ctx->admin_password, pass) != 0) return KADM5_BAD_PASSWORD;
 	} else {
-		return ERROR_MISSING_KEY;
+		return KADM5_BAD_PASSWORD;
 	}
 
 	handle = calloc(sizeof(*handle), 1);
@@ -673,8 +676,8 @@ kadm5_ret_t kadm5_init_with_skey(
 {
 	_kadm5_handle *handle;
 
-	if ((params->mask & KADM5_CONFIG_REALM) == 0) return ERROR_BAD_REALM;
-	if (strcmp(ctx->admin_name, client_name) != 0) return ERROR_LOGIN_FAILED;
+	if ((params->mask & KADM5_CONFIG_REALM) == 0) return KADM5_MISSING_CONF_PARAMS;
+	if (strcmp(ctx->admin_name, client_name) != 0) return KADM5_BAD_PASSWORD;
 
 	handle = calloc(sizeof(*handle), 1);
 	handle->ctx = ctx;
@@ -770,20 +773,20 @@ kadm5_ret_t kadm5_rename_principal(
 	_kadm5_handle *handle = server_handle;
 	_krb5_context *ctx = handle->ctx;
 
-	if (check_principal(old) != 0) return ERROR_BAD_DATA;
-	if (check_principal(new) != 0) return ERROR_BAD_DATA;
+	if (check_principal(old) != 0) return KADM5_BAD_PRINCIPAL;
+	if (check_principal(new) != 0) return KADM5_BAD_PRINCIPAL;
 
 	LOCK(ctx);
 	i = fake_search(ctx, new);
 	if (i != -1) {
 		UNLOCK(ctx);
-		return ERROR_ALREADY_EXISTS;
+		return KADM5_DUP;
 	}
 
 	i = fake_search(ctx, old);
 	if (i == -1) {
 		UNLOCK(ctx);
-		return ERROR_UNKNOWN_PRINCIPAL;
+		return KADM5_UNK_PRINC;
 	}
 
 	free(ctx->db[i].name);
@@ -848,11 +851,11 @@ kadm5_ret_t kadm5_chpass_principal(
 	_kadm5_handle *handle = server_handle;
 	_krb5_context *ctx = handle->ctx;
 
-	if (check_principal(principal) != 0) return ERROR_BAD_DATA;
+	if (check_principal(principal) != 0) return KADM5_BAD_PRINCIPAL;
 
 	LOCK(ctx);
 	i = fake_search(ctx, principal);
-	if (i == -1) return ERROR_UNKNOWN_PRINCIPAL;
+	if (i == -1) return KADM5_UNK_PRINC;
 
 	free(ctx->db[i].password);
 	ctx->db[i].password = pass ? strdup(pass) : NULL;

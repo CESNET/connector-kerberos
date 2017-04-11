@@ -317,8 +317,7 @@ public class KerberosConnectorTests {
 		Assert.assertEquals(co.getName().getNameValue(), newPrincipal);
 	}
 
-	//FIXME: proper fake kadm5 error codes, generic KerberosException not needed
-	@Test(expectedExceptions = { KerberosException.class, AlreadyExistsException.class })
+	@Test(expectedExceptions = { AlreadyExistsException.class })
 	public void renameFailTest() {
 		logger.info("Running Fail Rename Test");
 
