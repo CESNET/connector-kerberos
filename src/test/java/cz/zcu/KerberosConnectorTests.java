@@ -96,6 +96,7 @@ public class KerberosConnectorTests {
 	public void createTest() {
 		logger.info("Running Create Test");
 
+		final String principal = "Foo@" + realm;
 		final long modifyDate = System.currentTimeMillis();
 		final long princExpire = modifyDate + 1000 * 7 * 24 * 3600;
 		final long maxLife = 1000 * 4 * 3600;
@@ -104,7 +105,7 @@ public class KerberosConnectorTests {
 		ConnectorObject co;
 
 		Set<Attribute> createAttributes = new HashSet<Attribute>();
-		createAttributes.add(new Name("Foo"));
+		createAttributes.add(new Name(principal));
 		createAttributes.add(AttributeBuilder.buildPassword("Password".toCharArray()));
 		createAttributes.add(AttributeBuilder.buildEnabled(true));
 		createAttributes.add(AttributeBuilder.buildDisableDate(princExpire));
@@ -112,9 +113,9 @@ public class KerberosConnectorTests {
 		createAttributes.add(AttributeBuilder.build("maxTicketLife", maxLife));
 		createAttributes.add(AttributeBuilder.build("maxRenewableLife", maxRenew));
 		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
-		Assert.assertEquals(uid.getUidValue(), "Foo");
+		Assert.assertEquals(uid.getUidValue(), principal);
 
-		co = facade.getObject(ObjectClass.ACCOUNT, new Uid("Foo"), null);
+		co = facade.getObject(ObjectClass.ACCOUNT, new Uid(principal), null);
 		Assert.assertNotNull(co);
 		long validTo = AttributeUtil.getLongValue(co.getAttributeByName(OperationalAttributes.DISABLE_DATE_NAME));
 		long maxLife2 = AttributeUtil.getLongValue(co.getAttributeByName("maxTicketLife"));
@@ -130,7 +131,7 @@ public class KerberosConnectorTests {
 	public void createRandkeyTest() {
 		logger.info("Running Create Randkey Test");
 
-		final String principal = "host/foo";
+		final String principal = "host/foo@" + realm;
 		final String policy = "default_nohistory";
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		ConnectorObject co;
@@ -154,7 +155,7 @@ public class KerberosConnectorTests {
 		logger.info("Running Delete Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-		facade.delete(ObjectClass.ACCOUNT, new Uid("test"), builder.build());
+		facade.delete(ObjectClass.ACCOUNT, new Uid("test@" + realm), builder.build());
 	}
 
 	@Test
@@ -240,7 +241,7 @@ public class KerberosConnectorTests {
 		final ResultsHandler handler = new ToListResultsHandler();
 
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.contains(new Name("ad")), handler,
+				facade.search(ObjectClass.ACCOUNT, FilterBuilder.contains(new Name("earch-tes")), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
@@ -299,38 +300,39 @@ public class KerberosConnectorTests {
 	public void renameTest() {
 		logger.info("Running Update Name Test");
 
-		final String principal = "rename-test";
-		final String newPrincipal = "rename-test2";
+		final String principal = "rename-test@" + realm;
+		final String newPrincipal = "rename-test2@" + realm;
 		final Uid testUid = new Uid(principal);
 		Uid uid;
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
-		updateAttributes.add(new Name("rename-test2"));
+		updateAttributes.add(new Name(newPrincipal));
 
 		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, builder.build());
 		Assert.assertEquals(uid.getUidValue(), newPrincipal);
 
 		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid(newPrincipal), null);
 		Assert.assertNotNull(co);
-		Assert.assertEquals(co.getName().getNameValue(), newPrincipal + "@" + realm);
+		Assert.assertEquals(co.getName().getNameValue(), newPrincipal);
 	}
 
+	//FIXME: proper fake kadm5 error codes, generic KerberosException not needed
 	@Test(expectedExceptions = { KerberosException.class, AlreadyExistsException.class })
 	public void renameFailTest() {
 		logger.info("Running Fail Rename Test");
 
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
-		updateAttributes.add(new Name("rename-test"));
-		facade.update(ObjectClass.ACCOUNT, new Uid("rename-test2"), updateAttributes, null);
+		updateAttributes.add(new Name("rename-test-fail2@" + realm));
+		facade.update(ObjectClass.ACCOUNT, new Uid("rename-test-fail@" + realm), updateAttributes, null);
 	}
 
 	@Test
 	void updateDatesTest() {
 		logger.info("Running Update Dates Test");
 
-		final String principal = "update-test";
+		final String principal = "update-test@" + realm;
 		final Uid testUid = new Uid(principal);
 		final long modifyDate = System.currentTimeMillis();
 		final long expPrincDate = modifyDate + 3600000;
@@ -362,7 +364,7 @@ public class KerberosConnectorTests {
 	public void updatePolicyTest() {
 		logger.info("Running Update Policy Test");
 
-		final String principal = "update-test";
+		final String principal = "update-test@" + realm;
 		final Uid testUid = new Uid(principal);
 		Uid uid;
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
@@ -389,7 +391,7 @@ public class KerberosConnectorTests {
 	public void updateFlagsTest() {
 		logger.info("Running Update Flags Test");
 
-		final String principal = "update-test";
+		final String principal = "update-test@" + realm;
 		Uid testUid = new Uid(principal);
 		Uid uid;
 		int mask;
@@ -467,7 +469,7 @@ public class KerberosConnectorTests {
 	public void updateLife() {
 		logger.info("Running Update Ticket/Renew Life Test");
 
-		final String principal = "update-test";
+		final String principal = "update-test@" + realm;
 		final long maxTicket = 1000 * 3600 * 4;
 		final long maxRenew = 1000 * 3600 * 24;
 		final Uid testUid = new Uid(principal);
@@ -491,7 +493,7 @@ public class KerberosConnectorTests {
 	public void enableTest() {
 		logger.info("Running Enable Test");
 
-		final String principal = "update-test";
+		final String principal = "update-test@" + realm;
 		final Uid testUid = new Uid(principal);
 		Uid uid;
 		ConnectorObject co;
@@ -523,7 +525,7 @@ public class KerberosConnectorTests {
 	public void changePasswordTest() {
 		logger.info("Running Change Password Test");
 
-		final String principal = "password-test";
+		final String principal = "password-test@" + realm;
 		final Uid testUid = new Uid(principal);
 		Uid uid;
 		ConnectorObject co;
