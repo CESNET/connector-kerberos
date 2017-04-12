@@ -558,9 +558,19 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 		(*env)->DeleteLocalRef(env, query);
 	}
 
-	char** list;
-	int count;
-	long err = krbconn_list(ctx, cQuery, &list, &count);
+	char** list = NULL;
+	int count = 0;
+	long err;
+	krbconn_principal_t princ;
+
+	if (!cQuery || strchr(cQuery, '*') != '\0') {
+		err = krbconn_list(ctx, cQuery, &list, &count);
+		if (!err && !list) err = KADM5_FAILURE;
+	} else {
+		err = krbconn_get(ctx, cQuery, &princ);
+		if (!err) count = 1;
+		else if (err == KADM5_UNK_PRINC) err = 0;
+	}
 	free(cQuery);
 	if (err) {
 		throwKerberosException(env, ctx, err);
@@ -587,17 +597,21 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
 
-	// TODO: check errors from kerbconn_get, probably return them in KerberosSearchResults
-	for (int i = pageOffset; i < pageOffset + trueCount; i++) {
-		krbconn_principal_t princ;
-		memset(&princ, 0, sizeof(princ));
+	if (list) {
+		// TODO: check errors from kerbconn_get, probably return them in KerberosSearchResults
+		for (int i = pageOffset; i < pageOffset + trueCount; i++) {
+			krbconn_get(ctx, list[i], &princ);
+			add_princ_to_array(env, arr, i - pageOffset, princ, arrClass);
+			krbconn_free_principal(&princ);
+		}
 
-		krbconn_get(ctx, list[i], &princ);
-		add_princ_to_array(env, arr, i - pageOffset, princ, arrClass);
-		krbconn_free_principal(&princ);
+		krbconn_free_list(ctx, list, count);
+	} else {
+		if (count) {
+			add_princ_to_array(env, arr, 0, princ, arrClass);
+			krbconn_free_principal(&princ);
+		}
 	}
-
-	krbconn_free_list(ctx, list, count);
 
 	static jclass results = NULL;
 	static jmethodID mid = NULL;

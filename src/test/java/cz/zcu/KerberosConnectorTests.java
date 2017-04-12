@@ -172,6 +172,18 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
+	public void getUnknownObjectTest() {
+		logger.info("Running GetUnknownObject Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		builder.setAttributesToGet(Name.NAME);
+		ConnectorObject co =
+				facade.getObject(ObjectClass.ACCOUNT, new Uid(
+						"non-existant-unknown-user"), builder.build());
+		Assert.assertNull(co);
+	}
+
+	@Test
 	public void exactSearchTest() {
 		logger.info("Running Exact Search Test");
 
