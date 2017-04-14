@@ -20,7 +20,7 @@ The code is partially covered by unit-tests.
 
 1. MIT Kerberos Admin library
 
- * libkadm5 >= 1.15 (for thread safety)
+ * libkadm5
 
 2. ConnId (specific version as needed)
 

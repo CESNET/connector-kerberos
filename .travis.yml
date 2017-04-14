@@ -1,6 +1,6 @@
 language: java
 
-# for cmake >= 2.8.11
+# for cmake >= 2.8.12
 dist: trusty
 
 addons:
@@ -9,10 +9,6 @@ addons:
       cmake
       libkrb5-dev
       lcov
-
-# libkadm5 >= 1.15 not required - fake library used in tests
-before_install:
-  - sed -e '/KRB5_VERSION VERSION_LESS/,+2d' -i jni/CMakeLists.txt
 
 install:
   - pip install coveralls nose coveralls-merge

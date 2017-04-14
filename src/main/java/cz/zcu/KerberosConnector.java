@@ -121,7 +121,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	private native void krb5_rename(String name, String newName) throws KerberosException;
 	private native void krb5_chpasswd(String name, String password);
 	private native void krb5_modify(String name, long principalExpiry, long passwordExpiry, int attributes, String policy, long maxTicketLife, long maxRenewableLife, int mask) throws KerberosException;
-	private synchronized native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
+	private native KerberosSearchResults krb5_search(String query, int pageSize, int pageOffset);
 
 	/******************
 	 * SPI Operations
