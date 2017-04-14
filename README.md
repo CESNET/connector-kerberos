@@ -6,15 +6,15 @@
 
 Native Kerberos [Polygon+ConnId](https://wiki.evolveum.com/display/midPoint/Identity+Connectors) connector based on JNI and MIT libkadm5 library.
 
-Tested with [midPoint](https://evolveum.com/) version 3.5.
+Tested with [midPoint](https://evolveum.com/) version 3.5, 3.5.1.
 
 Sample configuration: [samples/kerberos.xml](samples/kerberos.xml).
 
 ## Status
 
-Basic functionality is there. And as typical for JNI technology and heavy development, it may crash all applications running, or eat your home pets.
+All basic functionality is there.
 
-The code is partially covered by unit-tests.
+The JNI technology may be risky - it can crash the whole JVM with all applications running. But the code is well covered by unit-tests.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Unit-tests are launched using locally compiled JNI library and fake libkrb5+libk
 
 ### Build JNI library
 
-JNI library needs to be compiled for the used runtime environment (midPoint server).
+JNI library needs to be compiled for the used runtime environment (the midPoint server).
 
 Steps:
 
@@ -127,7 +127,14 @@ There are error codes in headers from MIT Kerberos 5:
 * */usr/include/krb5.h*
 * */usr/include/kadm5/kadm5\_err.h*
 
-You may need to check Kerberos connector configuration parameters or keytab file owner/permissions.
+You may need to check Kerberos connector configuration parameters, keytab file owner/permissions, *krb5.conf* file, or time.
+
+### Debugging
+
+Debug logs can be enabled:
+
+* Java part: add logger *cz.zcu.KerberosConnector* at midPoint configuration logging page
+* JNI part: *debug* configuration option, which will enable logging into syslog
 
 ## Developer's Corner
 
