@@ -4,24 +4,24 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.identityconnectors.common.logging.Log;
-//import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
-//import org.identityconnectors.framework.common.objects.PredefinedAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
-//import org.identityconnectors.framework.common.objects.Schema;
-//import org.identityconnectors.framework.common.objects.ScriptContextBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
@@ -33,7 +33,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import cz.zcu.exceptions.KerberosException;
 
 /**
  * Attempts to test the {@link KerberosConnector} with the framework.
@@ -156,6 +155,14 @@ public class KerberosConnectorTests {
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		facade.delete(ObjectClass.ACCOUNT, new Uid("test@" + realm), builder.build());
+	}
+
+	@Test(expectedExceptions = { UnknownUidException.class })
+	public void deleteFailTest() {
+		logger.info("Running Delete Test");
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
+		facade.delete(ObjectClass.ACCOUNT, new Uid("non-existant-user@" + realm), builder.build());
 	}
 
 	@Test
@@ -552,6 +559,25 @@ public class KerberosConnectorTests {
 
 		// empty password not supported: ConnId expect always non-empty password
 		//attrs.add(AttributeBuilder.build(OperationalAttributes.PASSWORD_NAME));
+	}
+
+	@Test
+	public void schemaTest() {
+		logger.info("Running Schema Test");
+
+		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
+		boolean allowTix = false, name = false, expiration = false;
+
+		Schema schema = facade.schema();
+		ObjectClassInfo info = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+		for (AttributeInfo a : info.getAttributeInfo()) {
+			if ("allowTix".equals(a.getName())) allowTix = true;
+			if ("__NAME__".equals(a.getName())) name = true;
+			if ("__PASSWORD_EXPIRATION_DATE__".equals(a.getName())) expiration = true;
+		}
+		Assert.assertTrue(allowTix);
+		Assert.assertTrue(expiration);
+		Assert.assertTrue(name);
 	}
 
 	protected ConnectorFacade getFacade(KerberosConfiguration config) {
