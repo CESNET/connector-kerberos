@@ -13,6 +13,13 @@
 
 	<includeBaseDirectory>false</includeBaseDirectory>
 
+	<files>
+		<file>
+			<source>LICENSE</source>
+			<outputDirectory>/META-INF</outputDirectory>
+		</file>
+	</files>
+
 	<fileSets>
 		<fileSet>
 			<directory>target/classes</directory>
