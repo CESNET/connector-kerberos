@@ -219,11 +219,14 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			logger.info("Paged search was requested. Offset: {0}. Page size: {1}", options.getPagedResultsOffset(), options.getPageSize());
 
 			KerberosSearchResults results;
-			if (options.getPagedResultsOffset() == null) {
-				results = krb5_search(query, options.getPageSize(), 0);
-			} else {
-				results = krb5_search(query, options.getPageSize(), options.getPagedResultsOffset());
+			int offset = 0;
+
+			if (options.getPagedResultsOffset() != null) {
+				offset = options.getPagedResultsOffset();
+				if (offset < 1) throw new KerberosException("Page search \"next\" not supported");
+				offset--;
 			}
+			results = krb5_search(query, options.getPageSize(), offset);
 
 			if (results != null) {
 				remaining = results.remaining;
