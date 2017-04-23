@@ -5,8 +5,10 @@
 #
 # Intended for integration testing using real KDC server.
 #
+# MIT Kadm5 library > 1.12 required.
+#
 
-export KRB5_CONGIG
+export KRB5_CONFIG
 
 IFS=','
 cat `dirname $0`/data.csv | tail -n +2 | while read name pass policy flags modprinc moddate; do
