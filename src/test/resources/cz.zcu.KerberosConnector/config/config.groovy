@@ -18,9 +18,9 @@ environments {
         configuration {
         }
     }
-    CaseOther {
+    BadPassword {
         configuration {
-            remoteUser="FakeAdmin"
+            password=new GuardedString("password2".toCharArray())
         }
     }
 }
