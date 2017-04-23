@@ -75,6 +75,32 @@ out:
 	return out;
 }
 
+int java_class(JNIEnv *env, jclass *clazz, const char *name) {
+	if (*clazz == NULL) {
+		*clazz = (*env)->FindClass(env, name);
+		if (!*clazz) {
+			throwException(env, "java/lang/NoClassDefFoundError", name);
+			return 0;
+		}
+		*clazz = (*env)->NewGlobalRef(env, *clazz);
+	}
+
+	return 1;
+}
+
+int java_method(JNIEnv *env, jmethodID *mid, jclass clazz, const char *name, const char *signature) {
+	if (*mid == NULL) {
+		*mid = (*env)->GetMethodID(env, clazz, name, signature);
+		if (!*mid) {
+			throwException(env, "java/lang/NoSuchMethodException", name);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+
 krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 	static jfieldID fid = NULL;
 	if (fid == NULL) {
@@ -89,9 +115,8 @@ krbconn_context_t* getContext(JNIEnv* env, jobject this) {
 
 void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_principal_t princ, jclass clazz) {
 	static jmethodID mid = NULL;
-	if (mid == NULL) {
-		mid = (*env)->GetMethodID(env, clazz, "<init>", SIGNATURE_KERBEROS_PRINCIPAL_INIT);
-	}
+	if (!java_method(env, &mid, clazz, "<init>", SIGNATURE_KERBEROS_PRINCIPAL_INIT))
+		return;
 
 	jstring name = (*env)->NewStringUTF(env, princ.name);
 	jstring modifyPrincipal = (*env)->NewStringUTF(env, princ.mod_name);
@@ -109,7 +134,7 @@ void add_princ_to_array(JNIEnv* env, jobjectArray array, int pos, krbconn_princi
 	(*env)->DeleteLocalRef(env, jPrinc);
 }
 
-jint throwGenericException(JNIEnv* env, const char *exception, const char* message) {
+jint throwException(JNIEnv* env, const char *exception, const char* message) {
 	jclass exClass;
 
 	exClass = (*env)->FindClass(env, exception);

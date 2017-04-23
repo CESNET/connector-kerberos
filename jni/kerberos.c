@@ -391,7 +391,7 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 	}
 
 	errMsg = krbconn_error(ctx, code);
-	retval = throwGenericException(env, exception, errMsg);
+	retval = throwException(env, exception, errMsg);
 	free(errMsg);
 
 	if (ctx->debug) syslog(LOG_INFO, "%s: %s: %lu", __FUNCTION__, exception, code);
@@ -590,10 +590,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	}
 
 	static jclass arrClass = NULL;
-	if (arrClass == NULL) {
-		arrClass = (*env)->FindClass(env, "cz/zcu/KerberosPrincipal");
-		arrClass = (*env)->NewGlobalRef(env, arrClass);
-	}
+	if (!java_class(env, &arrClass, "cz/zcu/KerberosPrincipal")) return NULL;
 
 	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
 
@@ -615,13 +612,10 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	static jclass results = NULL;
 	static jmethodID mid = NULL;
-	if (results == NULL) {
-		results = (*env)->FindClass(env, "cz/zcu/KerberosSearchResults");
-		results = (*env)->NewGlobalRef(env, results);
-	}
-	if (mid == NULL) {
-		mid = (*env)->GetMethodID(env, results, "<init>", SIGNATURE_KERBEROS_SEARCH_RESULT_INIT);
-	}
+	if (!java_class(env, &results, "cz/zcu/KerberosSearchResults"))
+		return NULL;
+	if (!java_method(env, &mid, results, "<init>", SIGNATURE_KERBEROS_SEARCH_RESULT_INIT))
+		return NULL;
 
 	jint remaining = count - pageOffset - trueCount;
 	jobject out = (*env)->NewObject(env, results, mid, arr, remaining);
