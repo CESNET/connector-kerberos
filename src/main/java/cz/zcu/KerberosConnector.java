@@ -214,7 +214,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
 		int remaining = 0;
 
-		logger.info("Executing query: {0}", query);
+		logger.info("Executing query: {0}, options {1}", query, options);
 		if (options.getPageSize() != null && 0 < options.getPageSize()) {
 			logger.info("Paged search was requested. Offset: {0}. Page size: {1}", options.getPagedResultsOffset(), options.getPageSize());
 
