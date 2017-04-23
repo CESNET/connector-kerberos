@@ -2,6 +2,8 @@ package cz.zcu;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.*;
 
 /**
@@ -23,8 +25,8 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createContainsExpression(ContainsFilter filter, boolean not) {
-		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
-			filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
+		if (filter.getAttribute().is(Name.NAME) ||
+			filter.getAttribute().is(Uid.NAME)) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
 			if (StringUtil.isBlank(value)) {
 				return null;
@@ -45,8 +47,8 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createEndsWithExpression(EndsWithFilter filter, boolean not) {
-		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
-				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
+		if (filter.getAttribute().is(Name.NAME) ||
+				filter.getAttribute().is(Uid.NAME)) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
 			if (StringUtil.isBlank(value)) {
 				return null;
@@ -67,8 +69,8 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createStartsWithExpression(StartsWithFilter filter, boolean not) {
-		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
-				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
+		if (filter.getAttribute().is(Name.NAME) ||
+				filter.getAttribute().is(Uid.NAME)) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
 			if (StringUtil.isBlank(value)) {
 				return null;
@@ -89,8 +91,8 @@ public class KerberosFilterTranslator extends AbstractFilterTranslator<String> {
 	 */
 	@Override
 	protected String createEqualsExpression(EqualsFilter filter, boolean not) {
-		if (filter.getAttribute().is(AttributeUtil.createSpecialName("NAME")) ||
-				filter.getAttribute().is(AttributeUtil.createSpecialName("UID"))) {
+		if (filter.getAttribute().is(Name.NAME) ||
+				filter.getAttribute().is(Uid.NAME)) {
 			String value = AttributeUtil.getAsStringValue(filter.getAttribute());
 			if (StringUtil.isBlank(value)) {
 				return null;
