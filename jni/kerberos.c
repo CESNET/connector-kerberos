@@ -585,7 +585,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	}
 
 	if (count < pageOffset) {
-		printf("Count of found principals %d is less then requested offset %d\n", count, pageOffset);
+		if (ctx->debug) syslog(LOG_ERR, "%s(): count of found principals %d is less then requested offset %d", __FUNCTION__, count, pageOffset);
 		return NULL;
 	}
 
