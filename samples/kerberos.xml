@@ -115,15 +115,15 @@
                <expression>
                   <script>
                      <code>
-principal = basic.getAttributeValue(account, 'http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3', 'name')
-nameRegExp = /^(.*)@$(kerberosRealm)$/
-matcher = (principal =~ nameRegExp)
+principal = basic.getAttributeValue(account, 'http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3', 'name');
+nameRegExp = /^(.*)@$(kerberosRealm)$/;
+matcher = (principal =~ nameRegExp);
 if (matcher.matches()) {
-  log.info('principal: {}, intent: default, correlated owner: {}', principal, matcher[0][1])
-  return matcher[0][1]
+  log.info('principal: {}, intent: default, correlated owner: {}', principal, matcher[0][1]);
+  return matcher[0][1];
 } else {
-  log.warn('principal: {}, intent: default, no correlated owner', principal)
-  return '###ThisIsAnExpressionThatWillNeverMatchUserName###'
+  log.warn('principal: {}, intent: default, no correlated owner', principal);
+  return '###ThisIsAnExpressionThatWillNeverMatchUserName###';
 }
                     </code>
                   </script>
