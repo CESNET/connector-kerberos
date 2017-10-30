@@ -1,8 +1,5 @@
 language: java
 
-python:
-  - "3.6"
-
 # for cmake >= 2.8.12
 dist: trusty
 
@@ -12,9 +9,11 @@ addons:
       cmake
       libkrb5-dev
       lcov
+      python3
+      python3-pip
 
 install:
-  - pip install coveralls nose coveralls-merge
+  - pip3 install coveralls nose coveralls-merge
   - gem install coveralls-lcov
 
 after_success:
