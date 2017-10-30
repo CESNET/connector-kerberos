@@ -20,13 +20,12 @@
 	<description>Connector for Kerberos</description>
 
 	<issueManagement>
-		<system></system>
-		<url></url>
+		<system>GitHub Issues</system>
+		<url>https://github.com/CESNET/kerberos-connector/issues</url>
 	</issueManagement>
 	<scm>
-		<connection></connection>
-		<developerConnection></developerConnection>
-		<url></url>
+		<connection>https://github.com/CESNET/kerberos-connector</connection>
+		<developerConnection>git@github.com:CESNET/kerberos-connector</developerConnection>
 	</scm>
 
 	<properties>
