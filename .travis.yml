@@ -3,6 +3,8 @@ language: java
 # for cmake >= 2.8.12
 dist: trusty
 
+sudo: true
+
 addons:
   apt:
     packages:
@@ -13,7 +15,7 @@ addons:
       python3-pip
 
 install:
-  - pip3 install coveralls nose coveralls-merge
+  - sudo pip3 install coveralls nose coveralls-merge
   - gem install coveralls-lcov
 
 after_success:
