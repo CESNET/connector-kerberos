@@ -1,5 +1,8 @@
 language: java
 
+python:
+  - "3.6"
+
 # for cmake >= 2.8.12
 dist: trusty
 
