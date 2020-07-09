@@ -24,9 +24,6 @@ The JNI technology may be risky - it can crash the whole JVM with all applicatio
 
 2. ConnId (specific version as needed)
 
- * connector-parent (com.evolveum.polygon)
- * connector-framework (net.tirasa.connid)
-
 ## Build
 
 Unit-tests are launched using locally compiled JNI library and fake libkrb5+libkadm5 library.
