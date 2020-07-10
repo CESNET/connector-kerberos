@@ -155,6 +155,12 @@ Debug logs can be enabled:
 
     mvn surefire:test -DargLine= -Dtest=cz.zcu.KerberosConnectorTests#createTest
 
+### Launch integration tests
+
+Real Kerberos will be used by deactivating the *mock* profile:
+
+    mvn verify -P -mock
+
 ### Fake Kadm5 library
 
 Mock implementation of the Krb5 and Kadm5 libraries with function used by the JNI part. Data are dynamic, kept in the memory, and initial principals are read from the csv file.
@@ -164,4 +170,4 @@ Used config environment variables:
 * *FAKE\_KADM5\_DATA*: data file with read-only initial data (default: *target/test-classes/data.csv*)
 * *FAKE\_KADM5\_REALM*: emulated realm (default: *EXAMPLE.COM*)
 
-The library is preloaded for unit-tests using *LD\_PRELOAD*.
+The library is preloaded for unit-tests using *LD\_PRELOAD* by the *mock* maven build profile.

@@ -69,10 +69,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>${argLine} -Djava.library.path=${project.build.directory}</argLine>
-					<environmentVariables>
-						<FAKE_KADM5_DATA>${project.build.directory}/test-classes/data.csv</FAKE_KADM5_DATA>
-						<LD_PRELOAD>${project.build.directory}/libkadm5_fake.so</LD_PRELOAD>
-					</environmentVariables>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -257,4 +253,26 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>mock</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<environmentVariables>
+								<FAKE_KADM5_DATA>${project.build.directory}/test-classes/data.csv</FAKE_KADM5_DATA>
+								<LD_PRELOAD>${project.build.directory}/libkadm5_fake.so</LD_PRELOAD>
+							</environmentVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
