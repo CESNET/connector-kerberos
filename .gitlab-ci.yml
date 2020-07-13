@@ -1,0 +1,28 @@
+image:
+  name: valtri/build-debian:stretch-jni
+
+before_script:
+  - apt-get update -qq && apt-get install -y --no-install-recommends libkrb5-dev
+
+cache:
+  paths:
+    - .m2/repository
+
+variables:
+  MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true
+  MAVEN_CLI_OPTS: --batch-mode --errors -DinstallAtEnd=true -DdeployAtEnd=true
+
+build:
+  script:
+    - >
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" -o -n "$CI_COMMIT_TAG" ]; then
+        mvn $MAVEN_CLI_OPTS deploy -s $CI_SETTINGS;
+      else
+        mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
+      fi
+  artifacts:
+    paths:
+      - pom.xml
+      - target/*.jar
+      - target/maven-archiver/*.properties
+      - target/libkerberos-connector.so
