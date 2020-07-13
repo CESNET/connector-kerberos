@@ -6,6 +6,8 @@ EnableCompilerFlag(-std=c99)
 add_library(kerberos-connector SHARED java_access.c kerberos.c)
 add_definitions(-D_GNU_SOURCE)
 
+set(JAVA_AWT_LIBRARY NotNeeded)
+set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 find_package(JNI)
 if(NOT JNI_FOUND)
 	message(FATAL_ERROR "JNI not found")
