@@ -24,6 +24,9 @@ build-debian9:
 
 build-debian10:
   image: valtri/build-debian:buster-jni
+  variables:
+    # workaround for https://issues.apache.org/jira/browse/MJAVADOC-595
+    JAVA_HOME: /usr/lib/jvm/default-java
   script:
     - >
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" -o -n "$CI_COMMIT_TAG" ]; then
