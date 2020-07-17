@@ -38,7 +38,7 @@ Steps:
 
     mkdir target
     cd target
-    cmake -DTEST=On -DCMAKE_BUILD_TYPE=Debug ../jni
+    cmake ../jni
 	make
 
 ...and then move *libkerberos-connector.so* to the path, where *java.library.path* points.
