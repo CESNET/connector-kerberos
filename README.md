@@ -153,7 +153,7 @@ Debug logs can be enabled:
 
 ### Launch specific test
 
-    mvn surefire:test -DargLine= -Dtest=cz.zcu.KerberosConnectorTests#createTest
+    mvn test -Dtest=cz.zcu.KerberosConnectorTests#createTest
 
 ### Launch integration tests
 
