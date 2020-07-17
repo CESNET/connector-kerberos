@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
@@ -12,7 +13,7 @@
 
 char *krbconn_error(krbconn_context_t *ctx, long code) {
 	const char *krbmsg;
-	char *text;
+	char *text = NULL;
 
 	/*
 	 * krb5_get_error_message() won't work without connection (server
@@ -20,18 +21,22 @@ char *krbconn_error(krbconn_context_t *ctx, long code) {
 	 */
 	if (ctx->krb && ctx->handle) {
 		krbmsg = krb5_get_error_message(ctx->krb, code);
-		asprintf(&text, "Kerberos error %ld: %s", code, krbmsg);
+		if (asprintf(&text, "Kerberos error %ld: %s", code, krbmsg) == -1)
+			text = NULL;
 		krb5_free_error_message(ctx->krb, krbmsg);
 	} else {
 		switch(code) {
 			case KADM5_BAD_CLIENT_PARAMS:
-				asprintf(&text, "Kerberos error %ld: missing credentials", code);
+				if (asprintf(&text, "Kerberos error %ld: missing credentials", code) == -1)
+					text = NULL;
 				break;
 			case KRB5_KT_NOTFOUND:
-				asprintf(&text, "Kerberos error %ld: specified principal not found in keytab", code);
+				if (asprintf(&text, "Kerberos error %ld: specified principal not found in keytab", code) == -1)
+					text = NULL;
 				break;
 			default:
-				asprintf(&text, "Kerberos error %ld: (no details)", code);
+				if (asprintf(&text, "Kerberos error %ld: (no details)", code) == -1)
+					text = NULL;
 				break;
 		}
 	}
@@ -402,7 +407,6 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = calloc(sizeof(krbconn_context_t), 1);
 	krbconn_config_t conf;
-	char* err;
 
 	jfieldID fid;
 	jclass cls;
@@ -563,7 +567,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	long err;
 	krbconn_principal_t princ;
 
-	if (!cQuery || strchr(cQuery, '*') != '\0') {
+	if (!cQuery || strchr(cQuery, '*') != NULL) {
 		err = krbconn_list(ctx, cQuery, &list, &count);
 		if (!err && !list) err = KADM5_FAILURE;
 	} else {
@@ -622,7 +626,9 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	(*env)->DeleteLocalRef(env, arr);
 
-	if (ctx->debug) syslog(LOG_INFO, "%s() count: %ld, trueCount: %ld, remaining: %ld", __FUNCTION__, count, trueCount, remaining);
+	if (ctx->debug) {
+		syslog(LOG_INFO, "%s() count: %" PRId32 ", trueCount: %d, remaining: %" PRId32, __FUNCTION__, count, trueCount, remaining);
+	}
 	return out;
 }
 

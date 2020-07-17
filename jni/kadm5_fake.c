@@ -5,6 +5,7 @@
 #ifdef FAKE_PTHREAD
 #include <pthread.h>
 #endif
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -477,7 +478,8 @@ void krb5_free_principal(krb5_context ctx __attribute ((unused)), krb5_principal
 
 krb5_error_code krb5_unparse_name(krb5_context ctx __attribute ((unused)), krb5_const_principal principal, register char **name) {
 	if (check_principal(principal) != 0) return KADM5_BAD_PRINCIPAL;
-	asprintf(name, "%s@%s", principal->data[0].data, principal->realm.data);
+	if (asprintf(name, "%s@%s", principal->data[0].data, principal->realm.data) == -1)
+		return KADM5_FAILURE;
 
 	return 0;
 }
@@ -580,8 +582,10 @@ const char *krb5_get_error_message(krb5_context ctx __attribute ((unused)), krb5
 			break;
 		default: {
 			char *text;
-			asprintf(&text, "Unknown error %lu", code);
-			return text;
+			if (asprintf(&text, "Unknown error %" PRId32 , code) == -1)
+				return NULL;
+			else
+				return text;
 		}
 	}
 
@@ -625,7 +629,8 @@ krb5_error_code kadm5_init_krb5_context(krb5_context *pctx) {
 
 	ctx->realm = strdup(realm);
 	ctx->rlen = strlen(realm);
-	asprintf(&ctx->admin_name, "%s@%s", ctx->db[0].name, ctx->realm);
+	if (asprintf(&ctx->admin_name, "%s@%s", ctx->db[0].name, ctx->realm) == -1)
+		ctx->admin_name = NULL;
 	ctx->admin_password = ctx->db[0].password ? strdup(ctx->db[0].password) : NULL;
 
 	*pctx = ctx;
@@ -815,8 +820,11 @@ kadm5_ret_t kadm5_get_principals(
 
 	LOCK(ctx);
 	*princs = calloc(sizeof(char *), ctx->n);
+	if (!*princs)
+		return KADM5_FAILURE;
 	for (i = 0, j = 0; i < (int)ctx->n; i++) {
-		asprintf(&name, "%s@%s", ctx->db[i].name, handle->realm);
+		if (asprintf(&name, "%s@%s", ctx->db[i].name, handle->realm) == -1)
+			continue;
 		if (!exp || (fnmatch(exp, name, 0) == 0)) {
 			(*princs)[j++] = name;
 		}
