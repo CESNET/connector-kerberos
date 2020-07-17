@@ -10,12 +10,11 @@ variables:
   MAVEN_CLI_OPTS: --batch-mode --errors -DinstallAtEnd=true -DdeployAtEnd=true
 
 build-debian9:
-  image:
-    name: valtri/build-debian:stretch-jni
-  script:
+  image: valtri/build-debian:stretch-jni
+  script: &script
     - >
       mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
-  artifacts:
+  artifacts: &artifacts
     paths:
       - pom.xml
       - target/*.jar
@@ -24,8 +23,7 @@ build-debian9:
       - target/kerberos-connector*.tar.*
 
 build-debian10:
-  image:
-    name: valtri/build-debian:buster-jni
+  image: valtri/build-debian:buster-jni
   script:
     - >
       if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" -o -n "$CI_COMMIT_TAG" ]; then
@@ -33,10 +31,4 @@ build-debian10:
       else
         mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
       fi
-  artifacts:
-    paths:
-      - pom.xml
-      - target/*.jar
-      - target/maven-archiver/*.properties
-      - target/libkerberos-connector.so
-      - target/kerberos-connector*.tar.*
+  artifacts: *artifacts
