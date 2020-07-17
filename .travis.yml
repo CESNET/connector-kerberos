@@ -19,6 +19,6 @@ install:
   - gem install coveralls-lcov
 
 after_success:
-  - lcov -c -d target/CMakeFiles/kerberos-connector.dir -b target/CMakeFiles/kerberos-connector.dir --output-file target/lcov.info
+  - lcov -c -d target/jni-debug/CMakeFiles/kerberos-connector.dir -b target/jni-debug/CMakeFiles/kerberos-connector.dir --output-file target/lcov.info
   - coveralls-lcov -v -n target/lcov.info > target/coverage.c.json
   - coveralls-merge target/coverage.c.json target/coverage.java.json

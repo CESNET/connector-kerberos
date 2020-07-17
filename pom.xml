@@ -69,7 +69,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>@{argLine} -Djava.library.path=${project.build.directory}</argLine>
+					<argLine>@{argLine} -Djava.library.path=${project.build.directory}/jni-debug</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -158,7 +158,7 @@
 							<arguments>
 								<argument>${basedir}/jni</argument>
 							</arguments>
-							<workingDirectory>${project.build.directory}</workingDirectory>
+							<workingDirectory>${project.build.directory}/jni</workingDirectory>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
@@ -169,7 +169,7 @@
 						<phase>compile</phase>
 						<configuration>
 							<executable>make</executable>
-							<workingDirectory>${project.build.directory}</workingDirectory>
+							<workingDirectory>${project.build.directory}/jni</workingDirectory>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
@@ -183,7 +183,7 @@
 							<arguments>
 								<argument>package_source</argument>
 							</arguments>
-							<workingDirectory>${project.build.directory}</workingDirectory>
+							<workingDirectory>${project.build.directory}/jni</workingDirectory>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
@@ -200,7 +200,7 @@
 								<argument>-DCOVERAGE=On</argument>
 								<argument>${basedir}/jni</argument>
 							</arguments>
-							<workingDirectory>${project.build.directory}</workingDirectory>
+							<workingDirectory>${project.build.directory}/jni-debug</workingDirectory>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
@@ -211,7 +211,7 @@
 						<phase>test-compile</phase>
 						<configuration>
 							<executable>make</executable>
-							<workingDirectory>${project.build.directory}</workingDirectory>
+							<workingDirectory>${project.build.directory}/jni-debug</workingDirectory>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
@@ -279,7 +279,7 @@
 						<configuration>
 							<environmentVariables>
 								<FAKE_KADM5_DATA>${project.build.directory}/test-classes/data.csv</FAKE_KADM5_DATA>
-								<LD_PRELOAD>${project.build.directory}/libkadm5_fake.so</LD_PRELOAD>
+								<LD_PRELOAD>${project.build.directory}/jni-debug/libkadm5_fake.so</LD_PRELOAD>
 							</environmentVariables>
 						</configuration>
 					</plugin>

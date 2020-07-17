@@ -19,8 +19,8 @@ build-debian9:
       - pom.xml
       - target/*.jar
       - target/maven-archiver/*.properties
-      - target/libkerberos-connector.so
-      - target/kerberos-connector*.tar.*
+      - target/jni/libkerberos-connector.so
+      - target/jni/kerberos-connector*.tar.*
 
 build-debian10:
   image: valtri/build-debian:buster-jni

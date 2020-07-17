@@ -137,8 +137,8 @@ Debug logs can be enabled:
 
 ### Get line from crash address
 
-    addr2line -e target/libkerberos-connector.so $ADDRESS
-    #or: addr2line -e target/libkadm5_fake.so $ADDRESS
+    addr2line -e target/jni-debug/libkerberos-connector.so $ADDRESS
+    #or: addr2line -e target/jni-debug/libkadm5_fake.so $ADDRESS
 
 ...where *$ADDRESS* is the offset written by JVM for the problematic frame. Debug symbols required.
 
