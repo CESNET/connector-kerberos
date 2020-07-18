@@ -1,6 +1,3 @@
-before_script:
-  - apt-get update -qq && apt-get install -y --no-install-recommends libkrb5-dev
-
 cache:
   paths:
     - .m2/repository
@@ -9,8 +6,10 @@ variables:
   MAVEN_OPTS: -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true
   MAVEN_CLI_OPTS: --batch-mode --errors -DinstallAtEnd=true -DdeployAtEnd=true
 
-build-debian9:
-  image: valtri/build-debian:stretch-jni
+build-centos8:
+  image: valtri/build-centos:8-jni
+  before_script: &deps-dnf
+    - dnf install -y krb5-devel
   script: &script
     - >
       mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
@@ -22,8 +21,16 @@ build-debian9:
       - target/jni/libkerberos-connector.so
       - target/jni/kerberos-connector*.tar.*
 
+build-debian9:
+  image: valtri/build-debian:stretch-jni
+  before_script: &deps-apt
+    - apt-get update -qq && apt-get install -y --no-install-recommends libkrb5-dev
+  script: *script
+  artifacts: *artifacts
+
 build-debian10:
   image: valtri/build-debian:buster-jni
+  before_script: *deps-apt
   variables:
     # workaround for https://issues.apache.org/jira/browse/MJAVADOC-595
     JAVA_HOME: /usr/lib/jvm/default-java
