@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 include(cmake/EnableCompilerFlag.cmake)
+include(cmake/ParseVersion.cmake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 project(kerberos-connector C)
 EnableCompilerFlag(-std=c99)
@@ -35,6 +36,7 @@ set(TARGETS kerberos-connector)
 
 set(TEST 0 CACHE BOOL "Create test tools")
 set(COVERAGE 0 CACHE BOOL "Enable coverage testing compilfer flags")
+set(PROJECT_VERSION "0.0.0-SNAPSHOT" CACHE STRING "Project version")
 
 if(${TEST})
 	add_executable(krbconn_test krbconn_test.c)
@@ -60,10 +62,7 @@ install(TARGETS ${TARGETS}
 
 set(CPACK_GENERATOR "DEB;RPM")
 set(CPACK_PACKAGE_NAME "kerberos-connector")
-set(CPACK_PACKAGE_VERSION "1.0.0snapshot")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0snapshot")
+parse_version("${PROJECT_VERSION}" CPACK_PACKAGE)
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
 	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^i.86")

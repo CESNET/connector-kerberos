@@ -156,6 +156,7 @@
 						<configuration>
 							<executable>cmake</executable>
 							<arguments>
+								<argument>-DPROJECT_VERSION=${project.version}</argument>
 								<argument>${basedir}/jni</argument>
 							</arguments>
 							<workingDirectory>${project.build.directory}/jni</workingDirectory>
@@ -198,6 +199,7 @@
 								<argument>-DTEST=On</argument>
 								<argument>-DCMAKE_BUILD_TYPE=Debug</argument>
 								<argument>-DCOVERAGE=On</argument>
+								<argument>-DPROJECT_VERSION=${project.version}</argument>
 								<argument>${basedir}/jni</argument>
 							</arguments>
 							<workingDirectory>${project.build.directory}/jni-debug</workingDirectory>
