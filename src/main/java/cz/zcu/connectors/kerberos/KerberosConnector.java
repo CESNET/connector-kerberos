@@ -144,7 +144,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 				throw new InvalidAttributeValueException("Name attribute is required");
 
 			//In case of creating a principal, it's necessary to set its name
-			int mask = KerberosPrincipal.KRBCONN_PRINCIPAL;
+			int mask = KerberosPrincipal.MASK_PRINCIPAL;
 
 			KerberosPrincipal record = new KerberosPrincipal(createAttributes);
 			KerberosFlags attributes = record.getAttributes();
@@ -155,13 +155,13 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			// modify principal attributes
 			for (String flag : flags) {
 				attributes.setFlag(flag, attributesAccessor.findBoolean(flag));
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+				mask |= KerberosPrincipal.MASK_ATTRIBUTES;
 			}
 			// enable/disable principal using "allowTix" flag
 			if (attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME)) {
 				boolean enable = attributesAccessor.findBoolean(OperationalAttributes.ENABLE_NAME);
-				attributes.setFlag("allowTix", enable);
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+				attributes.setFlag(KerberosPrincipal.ATTR_ALLOW_TIX, enable);
+				mask |= KerberosPrincipal.MASK_ATTRIBUTES;
 			}
 
 			String guardedPassword = null;
@@ -279,22 +279,22 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 					throw new UnknownUidException("Modified principal " + uid.getUidValue() + " not found!");
 
 				attributes = results.principals[0].getAttributes();
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+				mask |= KerberosPrincipal.MASK_ATTRIBUTES;
 			}
 			// modify principal attributes
 			for (String flag : flags) {
 				attributes.setFlag(flag, attributesAccessor.findBoolean(flag));
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+				mask |= KerberosPrincipal.MASK_ATTRIBUTES;
 			}
 			// enable/disable principal using "allowTix" flag
 			if (attributesAccessor.hasAttribute(OperationalAttributes.ENABLE_NAME)) {
 				boolean enable = attributesAccessor.findBoolean(OperationalAttributes.ENABLE_NAME);
-				attributes.setFlag("allowTix", enable);
-				mask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+				attributes.setFlag(KerberosPrincipal.ATTR_ALLOW_TIX, enable);
+				mask |= KerberosPrincipal.MASK_ATTRIBUTES;
 			}
 
 			if (mask != 0) {
-				if ((mask & KerberosPrincipal.KRBCONN_ATTRIBUTES) != 0) {
+				if ((mask & KerberosPrincipal.MASK_ATTRIBUTES) != 0) {
 					logger.info("New Kerberos principal attributes of {0}: {1}", uid.getUidValue(), attributes.getAttributes());
 				}
 				logger.info("Modifying Kerberos principal {0}, update mask {1}", uid.getUidValue(), mask);
@@ -351,27 +351,27 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 		attributes.add(OperationalAttributeInfos.PASSWORD);
 		attributes.add(OperationalAttributeInfos.PASSWORD_EXPIRATION_DATE);
 
-		attributes.add(AttributeInfoBuilder.build("passwordChangeDate",
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_PASSWORD_CHANGE_DATE,
 				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
-		attributes.add(AttributeInfoBuilder.build("lastLoginDate",
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_LAST_LOGIN_DATE,
 				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
-		attributes.add(AttributeInfoBuilder.build("lastFailedDate",
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_LAST_FAILED_DATE,
 				long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
-		attributes.add(AttributeInfoBuilder.build("modifyPrincipal",
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_MODIFY_PRINCIPAL,
 			String.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
-		attributes.add(AttributeInfoBuilder.build("modifyDate",
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_MODIFY_DATE,
 			long.class, EnumSet.of(Flags.NOT_CREATABLE, Flags.NOT_UPDATEABLE)));
 
-		attributes.add(AttributeInfoBuilder.build("attributes", int.class));
-		attributes.add(AttributeInfoBuilder.build("policy", String.class));
-		attributes.add(AttributeInfoBuilder.build("maxTicketLife", long.class));
-		attributes.add(AttributeInfoBuilder.build("maxRenewableLife", long.class));
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_ATTRIBUTES, int.class));
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_POLICY, String.class));
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_MAX_TICKET_LIFE, long.class));
+		attributes.add(AttributeInfoBuilder.build(KerberosPrincipal.ATTR_MAX_RENEWABLE_LIFE, long.class));
 
-		for (String flag : KerberosFlags.flags) {
+		for (String flag : KerberosFlags.FLAGS) {
 			attributes.add(AttributeInfoBuilder.build(flag, boolean.class));
 		}
 

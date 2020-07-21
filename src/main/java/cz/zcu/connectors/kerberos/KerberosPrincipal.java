@@ -4,16 +4,34 @@ import java.util.Set;
 import org.identityconnectors.framework.common.objects.*;
 
 public class KerberosPrincipal {
-	public static final int KRBCONN_PRINCIPAL         = 0x0001;
-	public static final int KRBCONN_PRINC_EXPIRE_TIME = 0x0002;
-	public static final int KRBCONN_PW_EXPIRATION     = 0x0004;
-	public static final int KRBCONN_LAST_PWD_CHANGE   = 0x0008;
-	public static final int KRBCONN_ATTRIBUTES        = 0x0010;
-	public static final int KRBCONN_MAX_LIFE          = 0x0020;
-	public static final int KRBCONN_POLICY            = 0x0800;
-	public static final int KRBCONN_MAX_RLIFE         = 0x2000;
-	public static final int KRBCONN_LAST_SUCCESS      = 0x4000;
-	public static final int KRBCONN_LAST_FAILED       = 0x8000;
+	public static final int MASK_PRINCIPAL         = 0x0001;
+	public static final int MASK_PRINC_EXPIRE_TIME = 0x0002;
+	public static final int MASK_PW_EXPIRATION     = 0x0004;
+	public static final int MASK_LAST_PWD_CHANGE   = 0x0008;
+	public static final int MASK_ATTRIBUTES        = 0x0010;
+	public static final int MASK_MAX_LIFE          = 0x0020;
+	public static final int MASK_POLICY            = 0x0800;
+	public static final int MASK_MAX_RLIFE         = 0x2000;
+	public static final int MASK_LAST_SUCCESS      = 0x4000;
+	public static final int MASK_LAST_FAILED       = 0x8000;
+
+	// principal attributes
+	public static final String ATTR_PASSWORD_CHANGE_DATE = "passwordChangeDate";
+	public static final String ATTR_LAST_LOGIN_DATE = "lastLoginDate";
+	public static final String ATTR_LAST_FAILED_DATE = "lastFailedDate";
+	public static final String ATTR_MODIFY_PRINCIPAL = "modifyPrincipal";
+	public static final String ATTR_MODIFY_DATE = "modifyDate";
+	public static final String ATTR_ATTRIBUTES = "attributes";
+	public static final String ATTR_POLICY = "policy";
+	public static final String ATTR_MAX_TICKET_LIFE = "maxTicketLife";
+	public static final String ATTR_MAX_RENEWABLE_LIFE = "maxRenewableLife";
+	// principal attributes - boolean flags
+	public static final String ATTR_ALLOW_TIX = "allowTix";
+	public static final String ATTR_ALLOW_FORWARDABLE = "allowForwardable";
+	public static final String ATTR_ALLOW_RENEWABLE = "allowRenewable";
+	public static final String ATTR_REQUIRES_PREAUTH = "requiresPreauth";
+	public static final String ATTR_REQUIRES_HWAUTH = "requiresHwauth";
+	public static final String ATTR_REQUIRES_PWCHANGE = "requiresPwchange";
 
 	private String name;
 	private long princExpiry;
@@ -65,42 +83,42 @@ public class KerberosPrincipal {
 		princExpiry = 0;
 		if (attr != null) {
 			princExpiry = AttributeUtil.getLongValue(attr) / 1000;
-			updateMask |= KerberosPrincipal.KRBCONN_PRINC_EXPIRE_TIME;
+			updateMask |= KerberosPrincipal.MASK_PRINC_EXPIRE_TIME;
 		}
 
 		attr = AttributeUtil.find(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, attrs);
 		pwdExpiry = 0;
 		if (attr != null) {
 			pwdExpiry = AttributeUtil.getLongValue(attr) / 1000;
-			updateMask |= KerberosPrincipal.KRBCONN_PW_EXPIRATION;
+			updateMask |= KerberosPrincipal.MASK_PW_EXPIRATION;
 		}
 
 		attr = AttributeUtil.find("attributes", attrs);
 		attributes = new KerberosFlags(0);
 		if (attr != null) {
 			attributes.setAttributes(AttributeUtil.getIntegerValue(attr));
-			updateMask |= KerberosPrincipal.KRBCONN_ATTRIBUTES;
+			updateMask |= KerberosPrincipal.MASK_ATTRIBUTES;
 		}
 
 		attr = AttributeUtil.find("policy", attrs);
 		policy = null;
 		if (attr != null) {
 			policy = AttributeUtil.getStringValue(attr);
-			updateMask |= KerberosPrincipal.KRBCONN_POLICY;
+			updateMask |= KerberosPrincipal.MASK_POLICY;
 		}
 
 		attr = AttributeUtil.find("maxTicketLife", attrs);
 		maxTicketLife = 0;
 		if (attr != null) {
 			maxTicketLife = AttributeUtil.getLongValue(attr) / 1000;
-			updateMask |= KerberosPrincipal.KRBCONN_MAX_LIFE;
+			updateMask |= KerberosPrincipal.MASK_MAX_LIFE;
 		}
 
 		attr = AttributeUtil.find("maxRenewableLife", attrs);
 		maxRenewableLife = 0;
 		if (attr != null) {
 			maxRenewableLife = AttributeUtil.getLongValue(attr) / 1000;
-			updateMask |= KerberosPrincipal.KRBCONN_MAX_RLIFE;
+			updateMask |= KerberosPrincipal.MASK_MAX_RLIFE;
 		}
 	}
 
