@@ -30,8 +30,16 @@ char *krbconn_error(krbconn_context_t *ctx, long code) {
 				if (asprintf(&text, "Kerberos error %ld: missing credentials", code) == -1)
 					text = NULL;
 				break;
+			case KADM5_BAD_PASSWORD:
+				if (asprintf(&text, "Kerberos error %ld: bad password", code) == -1)
+					text = NULL;
+				break;
 			case KRB5_KT_NOTFOUND:
 				if (asprintf(&text, "Kerberos error %ld: specified principal not found in keytab", code) == -1)
+					text = NULL;
+				break;
+			case KADM5_MISSING_CONF_PARAMS:
+				if (asprintf(&text, "Kerberos error %ld: missing config parameters (for example missing realm in krb5.conf)", code) == -1)
 					text = NULL;
 				break;
 			default:
