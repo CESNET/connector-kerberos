@@ -9,24 +9,36 @@ variables:
 build-centos8:
   image: valtri/build-centos:8-jni
   before_script: &deps-dnf
-    - dnf install -y krb5-devel
-  script: &script
+    - dnf install -y file krb5-devel rpm-build
+  script: &script-rpm
     - >
       mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
-  artifacts: &artifacts
+      (cd target/jni; cpack -G RPM);
+  artifacts: &artifacts-rpm
     paths:
       - pom.xml
       - target/*.jar
       - target/maven-archiver/*.properties
-      - target/jni/libkerberos-connector.so
+      - target/jni/kerberos-connector*.*.rpm
       - target/jni/kerberos-connector*.tar.*
+      - target/jni/libkerberos-connector.so
 
 build-debian9:
   image: valtri/build-debian:stretch-jni
   before_script: &deps-apt
-    - apt-get update -qq && apt-get install -y --no-install-recommends libkrb5-dev
-  script: *script
-  artifacts: *artifacts
+    - apt-get update -qq && apt-get install -y --no-install-recommends file libkrb5-dev
+  script: &script-deb
+    - >
+      mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
+      (cd target/jni; cpack -G DEB);
+  artifacts: &artifacts-deb
+    paths:
+      - pom.xml
+      - target/*.jar
+      - target/maven-archiver/*.properties
+      - target/jni/kerberos-connector*.*.deb
+      - target/jni/kerberos-connector*.tar.*
+      - target/jni/libkerberos-connector.so
 
 build-debian10:
   image: valtri/build-debian:buster-jni
@@ -40,5 +52,6 @@ build-debian10:
         mvn $MAVEN_CLI_OPTS deploy -s $CI_SETTINGS;
       else
         mvn $MAVEN_CLI_OPTS verify -s $CI_SETTINGS;
-      fi
-  artifacts: *artifacts
+      fi;
+      (cd target/jni; cpack -G DEB);
+  artifacts: *artifacts-deb
