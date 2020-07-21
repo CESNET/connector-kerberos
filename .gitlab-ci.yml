@@ -55,3 +55,21 @@ build-debian10:
       fi;
       (cd target/jni; cpack -G DEB);
   artifacts: *artifacts-deb
+
+build-ubuntu18:
+  image: valtri/build-ubuntu:bionic-jni
+  before_script: *deps-apt
+  variables:
+    # workaround for https://issues.apache.org/jira/browse/MJAVADOC-595
+    JAVA_HOME: /usr/lib/jvm/default-java
+  script: *script-deb
+  artifacts: *artifacts-deb
+
+build-ubuntu20:
+  image: valtri/build-ubuntu:focal-jni
+  before_script: *deps-apt
+  variables:
+    # workaround for https://issues.apache.org/jira/browse/MJAVADOC-595
+    JAVA_HOME: /usr/lib/jvm/default-java
+  script: *script-deb
+  artifacts: *artifacts-deb
