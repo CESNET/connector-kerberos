@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -16,6 +16,9 @@ import org.identityconnectors.test.common.TestHelpers;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import cz.zcu.connectors.kerberos.KerberosConfiguration;
+import cz.zcu.connectors.kerberos.KerberosConnector;
 
 /**
  * Attempts to test the {@link KerberosConnector} with the framework.

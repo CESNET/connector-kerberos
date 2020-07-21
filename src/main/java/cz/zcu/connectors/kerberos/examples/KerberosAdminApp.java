@@ -1,10 +1,11 @@
-package cz.zcu.examples;
+package cz.zcu.connectors.kerberos.examples;
 
-import cz.zcu.KerberosConfiguration;
-import cz.zcu.KerberosConnector;
 import org.apache.commons.cli.*;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+
+import cz.zcu.connectors.kerberos.KerberosConfiguration;
+import cz.zcu.connectors.kerberos.KerberosConnector;
 
 import java.util.Arrays;
 import java.util.HashMap;

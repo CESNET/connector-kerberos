@@ -1,4 +1,4 @@
-package cz.zcu.exceptions;
+package cz.zcu.connectors.kerberos.exceptions;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 

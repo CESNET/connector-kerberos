@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import java.util.Set;
 import org.identityconnectors.framework.common.objects.*;

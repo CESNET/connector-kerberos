@@ -3,10 +3,13 @@
 
 #include "kerberos.h"
 
+#define KERBEROS_PACKAGE "cz.zcu.connectors.kerberos"
+#define KERBEROS_PACKAGE_PATH "cz/zcu/connectors/kerberos"
+
 // keep in sync with KerberosPrincipal.java
 #define SIGNATURE_KERBEROS_PRINCIPAL_INIT "(Ljava/lang/String;JJJLjava/lang/String;JILjava/lang/String;JJJJ)V"
 // keep in sync with KerberosSearchResult.java
-#define SIGNATURE_KERBEROS_SEARCH_RESULT_INIT "([Lcz/zcu/KerberosPrincipal;I)V"
+#define SIGNATURE_KERBEROS_SEARCH_RESULT_INIT "([L" KERBEROS_PACKAGE_PATH "/KerberosPrincipal;I)V"
 
 jboolean jboolean_getter(JNIEnv *, jobject, const char*);
 char* jstring_getter(JNIEnv *, jobject, const char*);

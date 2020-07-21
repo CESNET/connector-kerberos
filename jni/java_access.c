@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "cz_zcu_KerberosConnector.h"
+#include "cz_zcu_connectors_kerberos_KerberosConnector.h"
 #include "java_access.h"
 
 jboolean jboolean_getter(JNIEnv * env, jobject obj, const char* name) {

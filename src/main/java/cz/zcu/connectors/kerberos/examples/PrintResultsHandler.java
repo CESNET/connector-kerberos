@@ -1,4 +1,4 @@
-package cz.zcu.examples;
+package cz.zcu.connectors.kerberos.examples;
 
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.spi.SearchResultsHandler;

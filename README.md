@@ -130,7 +130,7 @@ You may need to check Kerberos connector configuration parameters, keytab file o
 
 Debug logs can be enabled:
 
-* Java part: add logger *cz.zcu.KerberosConnector* at midPoint configuration logging page
+* Java part: add logger *cz.zcu.connectors.kerberos.KerberosConnector* at midPoint configuration logging page
 * JNI part: *debug* configuration option, which will enable logging into syslog
 
 ## Developer's Corner
@@ -153,7 +153,7 @@ Debug logs can be enabled:
 
 ### Launch specific test
 
-    mvn test -Dtest=cz.zcu.KerberosConnectorTests#createTest
+    mvn test -Dtest=cz.zcu.connectors.kerberos.KerberosConnectorTests#createTest
 
 ### Launch integration tests
 

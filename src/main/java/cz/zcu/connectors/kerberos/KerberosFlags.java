@@ -1,11 +1,11 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import cz.zcu.exceptions.KerberosException;
+import cz.zcu.connectors.kerberos.exceptions.KerberosException;
 
 /**
  * Kerberos principal flags.

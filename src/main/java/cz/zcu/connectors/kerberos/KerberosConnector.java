@@ -1,10 +1,9 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import cz.zcu.exceptions.KerberosException;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -18,6 +17,8 @@ import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.identityconnectors.framework.spi.operations.*;
+
+import cz.zcu.connectors.kerberos.exceptions.KerberosException;
 
 /**
  * Main implementation of the Kerberos Connector.

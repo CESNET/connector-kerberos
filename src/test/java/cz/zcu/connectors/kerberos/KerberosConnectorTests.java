@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +33,9 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import cz.zcu.connectors.kerberos.KerberosConfiguration;
+import cz.zcu.connectors.kerberos.KerberosConnector;
 
 /**
  * Attempts to test the {@link KerberosConnector} with the framework.

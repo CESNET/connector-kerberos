@@ -78,7 +78,7 @@
 				<version>0.8.5</version>
 				<configuration>
 					<excludes>
-						<exclude>cz/zcu/examples/*</exclude>
+						<exclude>cz/zcu/connectors/kerberos/examples/*</exclude>
 					</excludes>
 					<rules>
 						<rule implementation="org.jacoco.maven.RuleConfiguration">

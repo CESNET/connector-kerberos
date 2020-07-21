@@ -6,7 +6,7 @@
 #include <kadm5/admin.h>
 #include <profile.h>
 
-#include "cz_zcu_KerberosConnector.h"
+#include "cz_zcu_connectors_kerberos_KerberosConnector.h"
 #include "java_access.h"
 #include "kerberos.h"
 
@@ -392,7 +392,7 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 			exception = "org/identityconnectors/framework/common/exceptions/AlreadyExistsException";
 			break;
 		default:
-			exception = "cz/zcu/exceptions/KerberosException";
+			exception = KERBEROS_PACKAGE_PATH "/exceptions/KerberosException";
 	}
 
 	errMsg = krbconn_error(ctx, code);
@@ -404,7 +404,7 @@ jint throwKerberosException(JNIEnv *env, krbconn_context_t* ctx, long code) {
 }
 
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , jobject this, jclass gs_accessor) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1init(JNIEnv * env , jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = calloc(sizeof(krbconn_context_t), 1);
 	krbconn_config_t conf;
 
@@ -413,7 +413,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 
 	//Get configuration from KerberosConfiguration
 	cls = (*env)->GetObjectClass(env, this);
-	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
+	fid = (*env)->GetFieldID(env, cls, "configuration", "L" KERBEROS_PACKAGE_PATH "/KerberosConfiguration;");
 	jobject config = (*env)->GetObjectField(env, this, fid);
 
 	krbconn_fill_config(env, config, &conf, gs_accessor);
@@ -435,7 +435,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1init(JNIEnv * env , j
 }
 
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, jobject this) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1destroy(JNIEnv *env, jobject this) {
 	krbconn_context_t* ctx = getContext(env, this);
 	jclass cls;
 	jfieldID fid;
@@ -451,7 +451,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1destroy(JNIEnv *env, 
 }
 
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this, jclass gs_accessor) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1renew(JNIEnv *env, jobject this, jclass gs_accessor) {
 	krbconn_context_t* ctx = getContext(env, this);
 	krbconn_config_t conf;
 	jfieldID fid;
@@ -459,7 +459,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 
 	//Get configuration from KerberosConfiguration
 	cls = (*env)->GetObjectClass(env, this);
-	fid = (*env)->GetFieldID(env, cls, "configuration", "Lcz/zcu/KerberosConfiguration;");
+	fid = (*env)->GetFieldID(env, cls, "configuration", "L" KERBEROS_PACKAGE_PATH "/KerberosConfiguration;");
 
 	(*env)->DeleteLocalRef(env, cls);
 	jobject config = (*env)->GetObjectField(env, this, fid);
@@ -474,7 +474,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1renew(JNIEnv *env, jo
 	krbconn_free_config(&conf);
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1create(
 	JNIEnv *env,
 	jobject this,
 	jstring name,
@@ -532,7 +532,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1create(
 	}
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, jobject this, jstring name) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1delete(JNIEnv *env, jobject this, jstring name) {
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
 	char* str = NULL;
@@ -551,7 +551,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1delete(JNIEnv *env, j
 		throwKerberosException(env, ctx, err);
 }
 
-JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query,
+JNIEXPORT jobject JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1search(JNIEnv *env, jobject this, jstring query,
  	                                                                      jint pageSize, jint pageOffset) {
 	krbconn_context_t* ctx = getContext(env, this);
 	char* cQuery = NULL;
@@ -594,7 +594,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	}
 
 	static jclass arrClass = NULL;
-	if (!java_class(env, &arrClass, "cz/zcu/KerberosPrincipal")) return NULL;
+	if (!java_class(env, &arrClass, KERBEROS_PACKAGE_PATH "/KerberosPrincipal")) return NULL;
 
 	jobjectArray arr = (*env)->NewObjectArray(env, trueCount, arrClass, NULL);
 
@@ -616,7 +616,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 
 	static jclass results = NULL;
 	static jmethodID mid = NULL;
-	if (!java_class(env, &results, "cz/zcu/KerberosSearchResults"))
+	if (!java_class(env, &results, KERBEROS_PACKAGE_PATH "/KerberosSearchResults"))
 		return NULL;
 	if (!java_method(env, &mid, results, "<init>", SIGNATURE_KERBEROS_SEARCH_RESULT_INIT))
 		return NULL;
@@ -632,7 +632,7 @@ JNIEXPORT jobject JNICALL Java_cz_zcu_KerberosConnector_krb5_1search(JNIEnv *env
 	return out;
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, jobject this, jstring name, jstring newName) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1rename(JNIEnv *env, jobject this, jstring name, jstring newName) {
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
 
@@ -654,7 +654,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1rename(JNIEnv *env, j
 		throwKerberosException(env, ctx, err);
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env, jobject this, jstring name, jstring password) {
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1chpasswd(JNIEnv *env, jobject this, jstring name, jstring password) {
 	krbconn_context_t* ctx = getContext(env, this);
 	const char* temp;
 
@@ -676,7 +676,7 @@ JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1chpasswd(JNIEnv *env,
 		throwKerberosException(env, ctx, err);
 }
 
-JNIEXPORT void JNICALL Java_cz_zcu_KerberosConnector_krb5_1modify(
+JNIEXPORT void JNICALL Java_cz_zcu_connectors_kerberos_KerberosConnector_krb5_1modify(
 	JNIEnv *env,
 	jobject this,
 	jstring name,

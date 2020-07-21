@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 /**
  * Helper object to keep search results.

@@ -1,4 +1,4 @@
-package cz.zcu;
+package cz.zcu.connectors.kerberos;
 
 import org.identityconnectors.common.security.GuardedString;
 

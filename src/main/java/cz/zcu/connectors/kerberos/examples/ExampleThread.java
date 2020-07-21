@@ -1,12 +1,13 @@
-package cz.zcu.examples;
+package cz.zcu.connectors.kerberos.examples;
 
-import cz.zcu.KerberosConnector;
 import org.identityconnectors.framework.common.objects.OperationOptions;
+
+import cz.zcu.connectors.kerberos.KerberosConnector;
+
+import static cz.zcu.connectors.kerberos.examples.KerberosAdminApp.config;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static cz.zcu.examples.KerberosAdminApp.config;
 
 public class ExampleThread implements Runnable {
 	@Override
