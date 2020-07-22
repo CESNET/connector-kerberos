@@ -61,7 +61,7 @@ public class KerberosConnectorBadPasswordTests {
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, "BadPassword");
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		builder.setAttributesToGet(Name.NAME);
-		facade.getObject(ObjectClass.ACCOUNT, new Uid("user2"), builder.build());
+		facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid("user2"), builder.build());
 	}
 
 	@Test(expectedExceptions = { InvalidPasswordException.class })

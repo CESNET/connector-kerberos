@@ -36,7 +36,7 @@
          <icfc:enableFilteredResultsHandler>false</icfc:enableFilteredResultsHandler>
       </icfc:resultsHandlerConfiguration>
       <!-- fill in the proper values -->
-      <icfc:configurationProperties xmlns:krbconn="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/cz.zcu.connectors.kerberos.kerberos-connector/cz.zcu.connectors.kerberos.KerberosConnector">
+      <icfc:configurationProperties xmlns:krbconn="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/cz.zcu.connectors.connector-kerberos/cz.zcu.connectors.kerberos.KerberosConnector">
          <krbconn:realm>$(kerberosRealm)</krbconn:realm>
          <krbconn:principal>$(kerberosPrincipal)</krbconn:principal>
          <krbconn:keytab>$(kerberosKeytab)</krbconn:keytab>

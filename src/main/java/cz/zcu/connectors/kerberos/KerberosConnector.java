@@ -135,7 +135,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 * {@inheritDoc}
 	 */
 	public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes, final OperationOptions options) {
-		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+		if (KerberosPrincipal.OBJECT_CLASS.equals(objectClass)) {
 			AttributesAccessor attributesAccessor = new AttributesAccessor(createAttributes);
 			Name name = AttributeUtil.getNameFromAttributes(createAttributes);
 			GuardedString password = AttributeUtil.getPasswordValue(createAttributes);
@@ -192,7 +192,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 * {@inheritDoc}
 	 */
 	public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
-		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+		if (KerberosPrincipal.OBJECT_CLASS.equals(objectClass)) {
 			logger.info("Deleting Kerberos principal {0}", uid.getUidValue());
 			krb5_delete(uid.getUidValue());
 		} else {
@@ -263,7 +263,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	 */
 	public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
 		Uid returnUid = uid;
-		if (ObjectClass.ACCOUNT.equals(objectClass)) {
+		if (KerberosPrincipal.OBJECT_CLASS.equals(objectClass)) {
 			AttributesAccessor attributesAccessor = new AttributesAccessor(replaceAttributes);
 			KerberosPrincipal record = new KerberosPrincipal(replaceAttributes);
 			KerberosFlags attributes = record.getAttributes();
@@ -382,8 +382,8 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 			attributes.add(AttributeInfoBuilder.build(flag, boolean.class));
 		}
 
-		final ObjectClassInfo ociInfoAccount = new ObjectClassInfoBuilder().setType(ObjectClass.ACCOUNT_NAME).addAllAttributeInfo(attributes).build();
-		schemaBuilder.defineObjectClass(ociInfoAccount);
+		final ObjectClassInfo ociInfoPrincipal = new ObjectClassInfoBuilder().setType(KerberosPrincipal.OBJECT_CLASS_NAME).addAllAttributeInfo(attributes).build();
+		schemaBuilder.defineObjectClass(ociInfoPrincipal);
 
 		return schemaBuilder.build();
 	}

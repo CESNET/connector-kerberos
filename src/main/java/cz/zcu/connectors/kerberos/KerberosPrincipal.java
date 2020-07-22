@@ -4,6 +4,9 @@ import java.util.Set;
 import org.identityconnectors.framework.common.objects.*;
 
 public class KerberosPrincipal {
+	public static final String OBJECT_CLASS_NAME = "principal";
+	public static final ObjectClass OBJECT_CLASS = new ObjectClass(OBJECT_CLASS_NAME);
+
 	public static final int MASK_PRINCIPAL         = 0x0001;
 	public static final int MASK_PRINC_EXPIRE_TIME = 0x0002;
 	public static final int MASK_PW_EXPIRATION     = 0x0004;

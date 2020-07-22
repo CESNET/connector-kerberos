@@ -15,7 +15,6 @@ import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
@@ -34,8 +33,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import cz.zcu.connectors.kerberos.KerberosConfiguration;
-import cz.zcu.connectors.kerberos.KerberosConnector;
 
 /**
  * Attempts to test the {@link KerberosConnector} with the framework.
@@ -81,20 +78,6 @@ public class KerberosConnectorTests {
 	}
 
 	@Test
-	public void exampleTest1() {
-		logger.info("Running Test 1...");
-		//You can use TestHelpers to do some of the boilerplate work in running a search
-		//TestHelpers.search(theConnector, ObjectClass.ACCOUNT, filter, handler, null);
-	}
-
-	@Test
-	public void exampleTest2() {
-		logger.info("Running Test 2...");
-		//Another example using TestHelpers
-		//List<ConnectorObject> results = TestHelpers.searchToList(theConnector, ObjectClass.GROUP, filter);
-	}
-
-	@Test
 	public void createTest() {
 		logger.info("Running Create Test");
 
@@ -114,10 +97,10 @@ public class KerberosConnectorTests {
 		createAttributes.add(AttributeBuilder.build("requiresPreauth", true));
 		createAttributes.add(AttributeBuilder.build("maxTicketLife", maxLife));
 		createAttributes.add(AttributeBuilder.build("maxRenewableLife", maxRenew));
-		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+		Uid uid = facade.create(KerberosPrincipal.OBJECT_CLASS, createAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
 
-		co = facade.getObject(ObjectClass.ACCOUNT, new Uid(principal), null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid(principal), null);
 		Assert.assertNotNull(co);
 		long validTo = AttributeUtil.getLongValue(co.getAttributeByName(OperationalAttributes.DISABLE_DATE_NAME));
 		long maxLife2 = AttributeUtil.getLongValue(co.getAttributeByName("maxTicketLife"));
@@ -142,10 +125,10 @@ public class KerberosConnectorTests {
 		createAttributes.add(new Name(principal));
 		createAttributes.add(AttributeBuilder.build("policy", policy));
 		createAttributes.add(AttributeBuilder.build("requiresPreauth", true));
-		Uid uid = facade.create(ObjectClass.ACCOUNT, createAttributes, null);
+		Uid uid = facade.create(KerberosPrincipal.OBJECT_CLASS, createAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
 
-		co = facade.getObject(ObjectClass.ACCOUNT, new Uid(principal), null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid(principal), null);
 		Assert.assertNotNull(co);
 		Assert.assertTrue(AttributeUtil.getBooleanValue(co.getAttributeByName("requiresPreauth")));
 		Assert.assertEquals((int)AttributeUtil.getIntegerValue(co.getAttributeByName("attributes")), 128);
@@ -157,7 +140,7 @@ public class KerberosConnectorTests {
 		logger.info("Running Delete Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-		facade.delete(ObjectClass.ACCOUNT, new Uid("test@" + realm), builder.build());
+		facade.delete(KerberosPrincipal.OBJECT_CLASS, new Uid("test@" + realm), builder.build());
 	}
 
 	@Test(expectedExceptions = { UnknownUidException.class })
@@ -165,7 +148,7 @@ public class KerberosConnectorTests {
 		logger.info("Running Delete Test");
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
-		facade.delete(ObjectClass.ACCOUNT, new Uid("non-existant-user@" + realm), builder.build());
+		facade.delete(KerberosPrincipal.OBJECT_CLASS, new Uid("non-existant-user@" + realm), builder.build());
 	}
 
 	@Test
@@ -175,7 +158,7 @@ public class KerberosConnectorTests {
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		builder.setAttributesToGet(Name.NAME);
 		ConnectorObject co =
-				facade.getObject(ObjectClass.ACCOUNT, new Uid(
+				facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid(
 						"user2"), builder.build());
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getName().getNameValue(), "user2@" + realm);
@@ -188,7 +171,7 @@ public class KerberosConnectorTests {
 		final OperationOptionsBuilder builder = new OperationOptionsBuilder();
 		builder.setAttributesToGet(Name.NAME);
 		ConnectorObject co =
-				facade.getObject(ObjectClass.ACCOUNT, new Uid(
+				facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid(
 						"non-existant-unknown-user"), builder.build());
 		Assert.assertNull(co);
 	}
@@ -203,16 +186,16 @@ public class KerberosConnectorTests {
 		builder.setPageSize(10);
 
 		final ResultsHandler handler = new ToListResultsHandler();
-		SearchResult result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Name(principal)), handler, builder.build());
+		SearchResult result = facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.equalTo(new Name(principal)), handler, builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
 
 		final ResultsHandler handler2 = new ToListResultsHandler();
-		result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid(principal)), handler2, builder.build());
+		result = facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.equalTo(new Uid(principal)), handler2, builder.build());
 		Assert.assertEquals(((ToListResultsHandler) handler2).getObjects().size(), 1);
 
 		final ResultsHandler handler3 = new ToListResultsHandler();
-		result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(new Uid(principal + "@" + realm)), handler3, builder.build());
+		result = facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.equalTo(new Uid(principal + "@" + realm)), handler3, builder.build());
 		Assert.assertEquals(((ToListResultsHandler) handler3).getObjects().size(), 1);
 	}
 
@@ -225,7 +208,7 @@ public class KerberosConnectorTests {
 		final ResultsHandler handler = new ToListResultsHandler();
 
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(new Name("user")), handler,
+				facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.startsWith(new Name("user")), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 3);
@@ -241,14 +224,14 @@ public class KerberosConnectorTests {
 
 		handler = new ToListResultsHandler();
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("3")), handler,
+				facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.endsWith(new Name("3")), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
 
 		handler = new ToListResultsHandler();
 		result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.endsWith(new Name("3@" + realm)), handler,
+				facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.endsWith(new Name("3@" + realm)), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
@@ -263,7 +246,7 @@ public class KerberosConnectorTests {
 		final ResultsHandler handler = new ToListResultsHandler();
 
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, FilterBuilder.contains(new Name("earch-tes")), handler,
+				facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.contains(new Name("earch-tes")), handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 1);
@@ -282,7 +265,7 @@ public class KerberosConnectorTests {
 		final ResultsHandler handler = new ToListResultsHandler();
 
 		SearchResult result =
-				facade.search(ObjectClass.ACCOUNT, null, handler,
+				facade.search(KerberosPrincipal.OBJECT_CLASS, null, handler,
 						builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertTrue(((ToListResultsHandler) handler).getObjects().size() > 1);
@@ -297,7 +280,7 @@ public class KerberosConnectorTests {
 		builder.setPagedResultsOffset(10000);
 		final ResultsHandler handler = new ToListResultsHandler();
 
-		SearchResult result = facade.search(ObjectClass.ACCOUNT, FilterBuilder.startsWith(new Name("user")), handler, builder.build());
+		SearchResult result = facade.search(KerberosPrincipal.OBJECT_CLASS, FilterBuilder.startsWith(new Name("user")), handler, builder.build());
 		Assert.assertEquals(result.getPagedResultsCookie(), "NO_COOKIE");
 		Assert.assertEquals(((ToListResultsHandler) handler).getObjects().size(), 0);
 	}
@@ -331,10 +314,10 @@ public class KerberosConnectorTests {
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(new Name(newPrincipal));
 
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, builder.build());
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, builder.build());
 		Assert.assertEquals(uid.getUidValue(), newPrincipal);
 
-		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, new Uid(newPrincipal), null);
+		ConnectorObject co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, new Uid(newPrincipal), null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getName().getNameValue(), newPrincipal);
 	}
@@ -346,7 +329,7 @@ public class KerberosConnectorTests {
 		final ConnectorFacade facade = getFacade(KerberosConnector.class, null);
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(new Name("rename-test-fail2@" + realm));
-		facade.update(ObjectClass.ACCOUNT, new Uid("rename-test-fail@" + realm), updateAttributes, null);
+		facade.update(KerberosPrincipal.OBJECT_CLASS, new Uid("rename-test-fail@" + realm), updateAttributes, null);
 	}
 
 	@Test
@@ -366,10 +349,10 @@ public class KerberosConnectorTests {
 		updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build(OperationalAttributes.DISABLE_DATE_NAME, expPrincDate));
 		updateAttributes.add(AttributeBuilder.build(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME, expPwDate));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
 
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Long expPrincDate2 = (Long)co.getAttributeByName(OperationalAttributes.DISABLE_DATE_NAME).getValue().get(0);
 		Long expPwDate2 = (Long)co.getAttributeByName(OperationalAttributes.PASSWORD_EXPIRATION_DATE_NAME).getValue().get(0);
@@ -392,18 +375,18 @@ public class KerberosConnectorTests {
 
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("policy", "mypolicy"));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		ConnectorObject co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("policy").getValue().get(0), "mypolicy");
 
 		// clear policy
 		updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("policy"));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertNull(co.getAttributeByName("policy").getValue().get(0));
 	}
@@ -421,9 +404,9 @@ public class KerberosConnectorTests {
 		mask = 0;
 		Set<Attribute> updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("attributes", 0));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		ConnectorObject co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		ConnectorObject co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("allowTix").getValue().get(0), true);
@@ -432,9 +415,9 @@ public class KerberosConnectorTests {
 		mask |= 128;
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("requiresPreauth", true));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("requiresPreauth").getValue().get(0), true);
@@ -442,9 +425,9 @@ public class KerberosConnectorTests {
 		mask |= 2;
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("allowForwardable", false));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("allowForwardable").getValue().get(0), false);
@@ -453,9 +436,9 @@ public class KerberosConnectorTests {
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("allowForwardable", true));
 		updateAttributes.add(AttributeBuilder.build("requiresHwauth", true));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("allowForwardable").getValue().get(0), true);
@@ -465,9 +448,9 @@ public class KerberosConnectorTests {
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("allowRenewable", false));
 		updateAttributes.add(AttributeBuilder.build("requiresHwauth", false));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("allowForwardable").getValue().get(0), true);
@@ -478,9 +461,9 @@ public class KerberosConnectorTests {
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("allowRenewable", true));
 		updateAttributes.add(AttributeBuilder.build("requiresPwchange", true));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), mask);
 		Assert.assertEquals(co.getAttributeByName("requiresPwchange").getValue().get(0), true);
@@ -502,9 +485,9 @@ public class KerberosConnectorTests {
 		updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build("maxTicketLife", maxTicket));
 		updateAttributes.add(AttributeBuilder.build("maxRenewableLife", maxRenew));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("maxTicketLife").getValue().get(0), maxTicket);
 		Assert.assertEquals(co.getAttributeByName("maxRenewableLife").getValue().get(0), maxRenew);
@@ -524,9 +507,9 @@ public class KerberosConnectorTests {
 		// disable
 		updateAttributes = new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build(OperationalAttributes.ENABLE_NAME, false));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), 192);
 		Assert.assertEquals(co.getAttributeByName("allowTix").getValue().get(0), false);
@@ -534,9 +517,9 @@ public class KerberosConnectorTests {
 		// enable
 		updateAttributes= new HashSet<Attribute>();
 		updateAttributes.add(AttributeBuilder.build(OperationalAttributes.ENABLE_NAME, true));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, updateAttributes, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, updateAttributes, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 		Assert.assertEquals(co.getAttributeByName("attributes").getValue().get(0), 128);
 		Assert.assertEquals(co.getAttributeByName("allowTix").getValue().get(0), true);
@@ -555,9 +538,9 @@ public class KerberosConnectorTests {
 
 		attrs = new HashSet<Attribute>();
 		attrs.add(AttributeBuilder.buildPassword("new-password".toCharArray()));
-		uid = facade.update(ObjectClass.ACCOUNT, testUid, attrs, null);
+		uid = facade.update(KerberosPrincipal.OBJECT_CLASS, testUid, attrs, null);
 		Assert.assertEquals(uid.getUidValue(), principal);
-		co = facade.getObject(ObjectClass.ACCOUNT, testUid, null);
+		co = facade.getObject(KerberosPrincipal.OBJECT_CLASS, testUid, null);
 		Assert.assertNotNull(co);
 
 		// empty password not supported: ConnId expect always non-empty password
@@ -572,7 +555,7 @@ public class KerberosConnectorTests {
 		boolean allowTix = false, name = false, expiration = false;
 
 		Schema schema = facade.schema();
-		ObjectClassInfo info = schema.findObjectClassInfo(ObjectClass.ACCOUNT_NAME);
+		ObjectClassInfo info = schema.findObjectClassInfo(KerberosPrincipal.OBJECT_CLASS_NAME);
 		for (AttributeInfo a : info.getAttributeInfo()) {
 			if ("allowTix".equals(a.getName())) allowTix = true;
 			if ("__NAME__".equals(a.getName())) name = true;
