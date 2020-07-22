@@ -112,28 +112,28 @@ public class KerberosPrincipal {
 			updateMask |= KerberosPrincipal.MASK_PW_EXPIRATION;
 		}
 
-		attr = AttributeUtil.find("attributes", attrs);
+		attr = AttributeUtil.find(ATTR_ATTRIBUTES, attrs);
 		attributes = new KerberosFlags(0);
 		if (attr != null) {
 			attributes.setAttributes(AttributeUtil.getIntegerValue(attr));
 			updateMask |= KerberosPrincipal.MASK_ATTRIBUTES;
 		}
 
-		attr = AttributeUtil.find("policy", attrs);
+		attr = AttributeUtil.find(ATTR_POLICY, attrs);
 		policy = null;
 		if (attr != null) {
 			policy = AttributeUtil.getStringValue(attr);
 			updateMask |= KerberosPrincipal.MASK_POLICY;
 		}
 
-		attr = AttributeUtil.find("maxTicketLife", attrs);
+		attr = AttributeUtil.find(ATTR_MAX_TICKET_LIFE, attrs);
 		maxTicketLife = 0;
 		if (attr != null) {
 			maxTicketLife = AttributeUtil.getLongValue(attr) / 1000;
 			updateMask |= KerberosPrincipal.MASK_MAX_LIFE;
 		}
 
-		attr = AttributeUtil.find("maxRenewableLife", attrs);
+		attr = AttributeUtil.find(ATTR_MAX_RENEWABLE_LIFE, attrs);
 		maxRenewableLife = 0;
 		if (attr != null) {
 			maxRenewableLife = AttributeUtil.getLongValue(attr) / 1000;
@@ -218,26 +218,26 @@ public class KerberosPrincipal {
 		if (princExpiry != 0)
 			builder.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, 1000 * princExpiry);
 		if (pwdChange != 0)
-			builder.addAttribute("passwordChangeDate", 1000 * pwdChange);
-		builder.addAttribute("modifyPrincipal", modifyPrincipal);
+			builder.addAttribute(ATTR_PASSWORD_CHANGE_DATE, 1000 * pwdChange);
+		builder.addAttribute(ATTR_MODIFY_PRINCIPAL, modifyPrincipal);
 		if (modifyDate != 0)
-			builder.addAttribute("modifyDate", 1000 * modifyDate);
-		builder.addAttribute("attributes", attributes.getAttributes());
-		builder.addAttribute("policy", policy);
+			builder.addAttribute(ATTR_MODIFY_DATE, 1000 * modifyDate);
+		builder.addAttribute(ATTR_ATTRIBUTES, attributes.getAttributes());
+		builder.addAttribute(ATTR_POLICY, policy);
 
-		builder.addAttribute("maxTicketLife", 1000 * maxTicketLife);
-		builder.addAttribute("maxRenewableLife", 1000 * maxRenewableLife);
+		builder.addAttribute(ATTR_MAX_TICKET_LIFE, 1000 * maxTicketLife);
+		builder.addAttribute(ATTR_MAX_RENEWABLE_LIFE, 1000 * maxRenewableLife);
 		if (lastLoginDate != 0)
-			builder.addAttribute("lastLoginDate", 1000 * lastLoginDate);
+			builder.addAttribute(ATTR_LAST_LOGIN_DATE, 1000 * lastLoginDate);
 		if (lastFailedDate != 0)
-			builder.addAttribute("lastFailedDate", 1000 * lastFailedDate);
+			builder.addAttribute(ATTR_LAST_FAILED_DATE, 1000 * lastFailedDate);
 
-		builder.addAttribute("allowTix", attributes.hasAllowTix());
-		builder.addAttribute("allowForwardable", attributes.hasAllowForwardable());
-		builder.addAttribute("allowRenewable", attributes.hasAllowRenewable());
-		builder.addAttribute("requiresPreauth", attributes.hasRequiresPreauth());
-		builder.addAttribute("requiresHwauth", attributes.hasRequiresHwauth());
-		builder.addAttribute("requiresPwchange", attributes.hasRequiresPwchange());
+		builder.addAttribute(ATTR_ALLOW_TIX, attributes.hasAllowTix());
+		builder.addAttribute(ATTR_ALLOW_FORWARDABLE, attributes.hasAllowForwardable());
+		builder.addAttribute(ATTR_ALLOW_RENEWABLE, attributes.hasAllowRenewable());
+		builder.addAttribute(ATTR_REQUIRES_PREAUTH, attributes.hasRequiresPreauth());
+		builder.addAttribute(ATTR_REQUIRES_HWAUTH, attributes.hasRequiresHwauth());
+		builder.addAttribute(ATTR_REQUIRES_PWCHANGE, attributes.hasRequiresPwchange());
 
 		return builder.build();
 	}
