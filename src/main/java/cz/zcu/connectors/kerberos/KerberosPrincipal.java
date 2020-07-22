@@ -48,8 +48,22 @@ public class KerberosPrincipal {
 
 	private int updateMask;
 
+
 	/**
-	 * Kerberos principal object.
+	 * Kerberos principal object constructor
+	 *
+	 * @param name name
+	 * @param princExpiry princExpiry attribute
+	 * @param pwdExpiry pwdExpiry attribute
+	 * @param pwdChange pwdChange attribute
+	 * @param modifyPrincipal modifyPrincipal attribute
+	 * @param modifyDate modifyDate attribute
+	 * @param attributes attributes attribute
+	 * @param policy policy attribute
+	 * @param maxTicketLife maxTicketLife attribute
+	 * @param maxRenewableLife maxRenewableLife attribute
+	 * @param lastLoginDate lastLoginDate attribute
+	 * @param lastFailedDate lastFailedDate attribute
 	 */
 	// keep parameters in sync with java_access.h
 	public KerberosPrincipal(String name, long princExpiry, long pwdExpiry, long pwdChange, String modifyPrincipal,
@@ -71,6 +85,11 @@ public class KerberosPrincipal {
 		this.updateMask = 0;
 	}
 
+	/**
+	 * Kerberos principal object constructor
+	 *
+	 * @param attrs ConnId attributes
+	 */
 	public KerberosPrincipal(Set<Attribute> attrs) {
 		Attribute attr;
 

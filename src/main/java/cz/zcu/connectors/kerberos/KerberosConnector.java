@@ -328,12 +328,18 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 	}
 
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void test() {
 		logger.info("Testing connection and credentials");
 		krb5_renew(GuardedStringAccessor.class);
 	}
 
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Schema schema() {
 		logger.info("schema()");
 		if (schema == null) {
@@ -341,6 +347,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 		}
 		return schema;
 	}
+
 
 	private Schema buildSchema() {
 		final SchemaBuilder schemaBuilder = new SchemaBuilder(KerberosConnector.class);
@@ -380,6 +387,7 @@ public class KerberosConnector implements PoolableConnector, CreateOp, DeleteOp,
 
 		return schemaBuilder.build();
 	}
+
 
 	static {
 		System.loadLibrary("kerberos-connector");
