@@ -4,9 +4,9 @@
 
 # Kerberos Connector
 
-Native Kerberos [Polygon+ConnId](https://wiki.evolveum.com/display/midPoint/Identity+Connectors) connector based on JNI and MIT libkadm5 library.
+Native Kerberos [ConnId](https://wiki.evolveum.com/display/midPoint/Identity+Connectors) connector based on JNI and MIT libkadm5 library.
 
-Tested with [midPoint](https://evolveum.com/) version 3.5, 3.5.1.
+Tested with [midPoint](https://evolveum.com/).
 
 Sample configuration: [samples/kerberos.xml](samples/kerberos.xml).
 
@@ -111,7 +111,7 @@ Test will perform new login with configured credentials.
 
 #### Live sync
 
-## Troubleshooing
+## Troubleshooting
 
 ### PermissionDeniedException with "Kerberos error NUMBER: (no details)" message
 
